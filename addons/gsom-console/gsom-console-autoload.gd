@@ -31,7 +31,7 @@ func _ready() -> void:
 			if cmdName == "help":
 				_help(args);
 			elif cmdName == "quit":
-				_quit(args);
+				get_tree().quit();
 	);
 	
 	self.log("Type `[b][color=orange]help[/color][/b]` to view existing commands and variables.");
@@ -149,10 +149,6 @@ func getMatches(text: String) -> Array:
 			matches.append(k);
 	
 	return matches;
-
-
-func _quit(_args: Array) -> void:
-	get_tree().quit();
 
 
 func _help(args: Array) -> void:
