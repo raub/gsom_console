@@ -1,0 +1,43 @@
+[gd_scene load_steps=4 format=3 uid="uid://f03t5oy48uev"]
+
+[ext_resource type="Script" path="res://addons/gsom-console/ui/console-wrap.gd" id="1_f3lxn"]
+[ext_resource type="Script" path="res://preview.gd" id="1_jsdml"]
+[ext_resource type="Texture2D" uid="uid://bxk40cnadw2qu" path="res://game.jpg" id="2_uro0l"]
+
+[node name="Preview" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_jsdml")
+
+[node name="ImageGame" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_uro0l")
+
+[node name="LabelHint" type="Label" parent="."]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 621.0
+offset_bottom = 90.0
+theme_override_font_sizes/font_size = 42
+text = "Press \"`/~\" to toggle console."
+
+[node name="GsomConsolePanel" type="Control" parent="."]
+custom_minimum_size = Vector2(480, 320)
+anchors_preset = 0
+offset_left = 147.0
+offset_top = 115.0
+offset_right = 839.0
+offset_bottom = 606.0
+script = ExtResource("1_f3lxn")
+blur = 0.5
+color = Color(0.054902, 0.0901961, 0.0313726, 0.462745)

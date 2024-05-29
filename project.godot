@@ -1,0 +1,32 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="gd-plugin-gsom-console"
+config/description="Adds the GsomConsole autoload singleton and provides a simple Half-Life style console widget node (GsomConsolePanel). The autoload singleton can be used separately to work with CVARs and CMDs and provide data to your own console widget if you wish."
+config/version="0.0.1"
+run/main_scene="res://preview.tscn"
+config/features=PackedStringArray("4.2", "Forward Plus")
+config/icon="res://icon.png"
+
+[autoload]
+
+GsomConsole="*res://addons/gsom-console/./gsom-console-autoload.gd"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/size/always_on_top=true
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gsom-console/plugin.cfg")
