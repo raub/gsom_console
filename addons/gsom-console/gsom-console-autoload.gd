@@ -5,8 +5,6 @@ signal onCmd(cmdName: String, args: Array);
 signal onToggle(isVisible: bool);
 signal onLog(richText: String);
 
-var isEnabled: bool = false;
-
 var _isVisible: bool = false;
 var _cvars: Dictionary = {};
 var _cmds: Dictionary = {};
@@ -26,8 +24,6 @@ var _history: PackedStringArray = [];
 
 
 func _ready() -> void:
-	_initConsole();
-	
 	registerCmd("help", "Display available commands and variables.");
 	registerCmd("quit", "Close the application, exit to desktop.");
 	onCmd.connect(
@@ -205,7 +201,7 @@ func hide() -> void:
 
 
 func show() -> void:
-	if _isVisible || !isEnabled:
+	if _isVisible:
 		return;
 	
 	_isVisible = true;
@@ -269,16 +265,6 @@ func submit(expression: String) -> void:
 		return;
 	
 	self.error("Unrecognized command `%s`." % [expression]);
-
-
-func _initConsole() -> void:
-	for cvar in _cvars:
-		@warning_ignore("unsafe_cast")
-		registerCvar(cvar as String, _cvars[cvar].value, _cvars[cvar].help as String);
-	
-	for cmd in _cmds:
-		@warning_ignore("unsafe_cast")
-		registerCmd(cmd as String, _cmds[cmd].help as String);
 
 
 func log(msg: String) -> void:
