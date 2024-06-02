@@ -18,9 +18,6 @@ var _index: int = 0;
 
 
 func _ready() -> void:
-	#_blur.material = _blur.material.duplicate(true);
-	#var shaderMat: ShaderMaterial = _blur.material;
-	#shaderMat.shader = shaderMat.shader.duplicate();
 	self.visible = GsomConsole.isVisible;
 	_panel.gui_input.connect(_handleInput);
 	_editCmd.gui_input.connect(_handleEditKeys);

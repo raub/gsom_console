@@ -8,9 +8,15 @@ signal onLog(richText: String);
 var _isVisible: bool = false;
 var _cvars: Dictionary = {};
 var _cmds: Dictionary = {};
-var _log: String = "";
 var _history: PackedStringArray = [];
 
+
+var _logText: String = "";
+@export var logText: String = "":
+	get:
+		return _logText;
+	set(v):
+		_logText = v;
 
 @export var isVisible: bool = false:
 	get:
@@ -220,8 +226,8 @@ func _historyPush(expression: String) -> void:
 func submit(expression: String) -> void:
 	var trimmed: String = expression.strip_edges(true, true);
 	
-	var r = RegEx.new()
-	r.compile("\\S+") # negated whitespace character class
+	var r = RegEx.new();
+	r.compile("\\S+"); # negated whitespace character class
 	var groups: Array[RegExMatch] = r.search_all(trimmed);
 	
 	if groups.size() < 1:
@@ -264,7 +270,7 @@ func submit(expression: String) -> void:
 
 
 func log(msg: String) -> void:
-	_log += msg + "\n";
+	_logText += msg + "\n";
 	onLog.emit(msg);
 
 
