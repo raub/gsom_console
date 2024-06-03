@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5ou8dwctvpsy"
-path="res://.godot/imported/console.svg-8a3a72e725d68a2de84c24ca8d77b0a0.ctex"
+path="res://.godot/imported/console.svg-d58aa675381e5f04025f05e2677591a5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/gsom-console/console.svg"
-dest_files=["res://.godot/imported/console.svg-8a3a72e725d68a2de84c24ca8d77b0a0.ctex"]
+source_file="res://addons/gsom-console/tools/console.svg"
+dest_files=["res://.godot/imported/console.svg-d58aa675381e5f04025f05e2677591a5.ctex"]
 
 [params]
 

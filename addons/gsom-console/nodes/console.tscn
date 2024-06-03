@@ -1,12 +1,12 @@
 [gd_scene load_steps=9 format=3 uid="uid://d3jm7r6ulco1u"]
 
-[ext_resource type="Script" path="res://addons/gsom-console/ui/console.gd" id="1_7x108"]
-[ext_resource type="Theme" uid="uid://dicw3tpmpx0f2" path="res://addons/gsom-console/ui/console.theme" id="1_td2sp"]
-[ext_resource type="Shader" path="res://addons/gsom-console/ui/blur.gdshader" id="2_m43vg"]
-[ext_resource type="PackedScene" uid="uid://ve34jvxp5je" path="res://addons/gsom-console/ui/button-hint.tscn" id="4_1nhin"]
+[ext_resource type="Theme" uid="uid://dicw3tpmpx0f2" path="res://addons/gsom-console/resources/console.theme" id="1_pa078"]
+[ext_resource type="Script" path="res://addons/gsom-console/nodes/console.gd" id="2_5s3eh"]
+[ext_resource type="Shader" path="res://addons/gsom-console/resources/blur.gdshader" id="3_5mtue"]
+[ext_resource type="PackedScene" uid="uid://ve34jvxp5je" path="res://addons/gsom-console/nodes/button-hint.tscn" id="4_j173e"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_quour"]
-shader = ExtResource("2_m43vg")
+shader = ExtResource("3_5mtue")
 shader_parameter/blur = 3.0
 shader_parameter/color = Color(0, 0, 0, 0.3)
 
@@ -31,8 +31,8 @@ offset_right = -3.0
 offset_bottom = -3.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("1_td2sp")
-script = ExtResource("1_7x108")
+theme = ExtResource("1_pa078")
+script = ExtResource("2_5s3eh")
 
 [node name="Panel" type="Control" parent="."]
 layout_mode = 1
@@ -132,16 +132,16 @@ theme_override_styles/panel = SubResource("StyleBoxEmpty_8lbl8")
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="Hint1" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_1nhin")]
+[node name="Hint1" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_j173e")]
 layout_mode = 2
 
-[node name="Hint2" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_1nhin")]
+[node name="Hint2" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_j173e")]
 layout_mode = 2
 
-[node name="Hint3" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_1nhin")]
+[node name="Hint3" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_j173e")]
 layout_mode = 2
 
-[node name="Hint4" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_1nhin")]
+[node name="Hint4" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_j173e")]
 layout_mode = 2
 
 [node name="RowInput" type="HBoxContainer" parent="Panel/ColumnMain"]

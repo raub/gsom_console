@@ -27,7 +27,7 @@ specific per CMD call - only emits the `onCmd` signal.
 ## GsomConsole
 
 
-**Signals**:
+**Signals**
 
 * `signal onChangeCvar(cvarName: String)` - a CVAR has been changed. You may fetch its updated value
     with `getCvar(cvarName)` and react to the change.
@@ -38,7 +38,7 @@ specific per CMD call - only emits the `onCmd` signal.
 * `signal onLog(richText: String)` - a log string was added. Only the latest addition is passed
     to the signal. The whole log text is available as `logText` prop.
 
-**Props**:
+**Properties**
 
 * `logText: String` - the whole log text content. This may be also used to reset the log.
 * `isVisible: bool` - current visibility status. As the UI is not directly linked to
@@ -47,7 +47,7 @@ specific per CMD call - only emits the `onCmd` signal.
 * `history: PackedStringArray` - history of inserted commands.
     Latest command is last. Duplicate commands not stored.
 
-**Methods**:
+**Methods**
 
 * `registerCvar(cvarName: String, value: Variant, helpText: String = "") -> void` - makes a new
     CVAR available with default value and optional help note.
@@ -80,3 +80,20 @@ specific per CMD call - only emits the `onCmd` signal.
 ## GsomConsolePanel
 
 The default UI console panel, available as a descendant of `Control` node.
+
+**Properties**
+
+* `float blur` [default: 0.6] [property: setter, getter] -
+    Background blur intensity. Blur is only visible while `color.a` is below 1.
+
+
+* `Color color` [default: Color(0, 0, 0, 0.3)] [property: setter, getter] -
+    Panel background color. When alpha is 0 - only blur applied, if 1 no blur visible.
+
+
+* `String labelWindow` [default: "Console"] [property: setter, getter] -
+    The window title displayed at the top left corner.
+
+
+* `String labelSubmit` [default: "submit"] [property: setter, getter] -
+    The label on "submit" button at the bottom right.

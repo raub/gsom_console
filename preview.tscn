@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://f03t5oy48uev"]
 
-[ext_resource type="Script" path="res://addons/gsom-console/ui/console-wrap.gd" id="1_f3lxn"]
+[ext_resource type="Script" path="res://addons/gsom-console/tools/console-wrap.gd" id="1_f3lxn"]
 [ext_resource type="Script" path="res://preview.gd" id="1_jsdml"]
 [ext_resource type="Texture2D" uid="uid://bxk40cnadw2qu" path="res://game.jpg" id="2_uro0l"]
 
