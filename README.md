@@ -75,6 +75,7 @@ specific per CMD call - only emits the `onCmd` signal.
 
 * `help [name]` - collect and display the currently available CVARs and CMDs. If
     the optional parameter `name` is provided, the console will only display the matching info.
+* `quit` - immediately closes the application.
 
 
 ## GsomConsolePanel
@@ -86,14 +87,11 @@ The default UI console panel, available as a descendant of `Control` node.
 * `float blur` [default: 0.6] [property: setter, getter] -
     Background blur intensity. Blur is only visible while `color.a` is below 1.
 
-
 * `Color color` [default: Color(0, 0, 0, 0.3)] [property: setter, getter] -
     Panel background color. When alpha is 0 - only blur applied, if 1 no blur visible.
 
-
 * `String labelWindow` [default: "Console"] [property: setter, getter] -
     The window title displayed at the top left corner.
-
 
 * `String labelSubmit` [default: "submit"] [property: setter, getter] -
     The label on "submit" button at the bottom right.

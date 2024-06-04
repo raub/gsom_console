@@ -39,5 +39,3 @@ offset_top = 115.0
 offset_right = 839.0
 offset_bottom = 606.0
 script = ExtResource("1_f3lxn")
-blur = 0.5
-color = Color(0.054902, 0.0901961, 0.0313726, 0.462745)

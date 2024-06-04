@@ -34,6 +34,14 @@ grow_vertical = 2
 theme = ExtResource("1_pa078")
 script = ExtResource("2_5s3eh")
 
+[node name="Draggable" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
 [node name="Panel" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -41,7 +49,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 1
+mouse_filter = 2
 
 [node name="Blur" type="ColorRect" parent="Panel"]
 material = SubResource("ShaderMaterial_quour")
@@ -191,6 +199,7 @@ layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 grow_horizontal = 2
+mouse_default_cursor_shape = 9
 
 [node name="ResizeRight" type="Control" parent="Resizers"]
 custom_minimum_size = Vector2(6, 0)
@@ -201,6 +210,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 0
 grow_vertical = 2
+mouse_default_cursor_shape = 10
 
 [node name="ResizeBottom" type="Control" parent="Resizers"]
 custom_minimum_size = Vector2(0, 6)
@@ -211,6 +221,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_default_cursor_shape = 9
 
 [node name="ResizeLeft" type="Control" parent="Resizers"]
 custom_minimum_size = Vector2(6, 0)
@@ -218,3 +229,4 @@ layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0
 grow_vertical = 2
+mouse_default_cursor_shape = 10

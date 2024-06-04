@@ -7,12 +7,13 @@ func _ready():
 	keyLquo.keycode = KEY_QUOTELEFT;
 	InputMap.action_add_event("Console", keyLquo);
 	
-	GsomConsole.registerCvar("test1", 1.0, "Test cvar 1.");
-	GsomConsole.registerCvar("test2", 2.0, "Test cvar 2.");
-	GsomConsole.registerCvar("test3", 3.0, "Test cvar 3.");
-	GsomConsole.registerCvar("test4", 4.0, "Test cvar 4.");
-	GsomConsole.registerCvar("test5", 5.0, "Test cvar 5.");
-	GsomConsole.log("Use `help` to see available commands.");
+	GsomConsole.registerCvar("test1", 1.0, "Test CVAR 1.");
+	GsomConsole.registerCvar("test2", true, "Test CVAR 2.");
+	GsomConsole.registerCvar("test3", 3, "Test CVAR 3.");
+	GsomConsole.registerCvar("test4", "hello", "Test CVAR 4.");
+	GsomConsole.registerCvar("test5", -10, "Test CVAR 5.");
+	
+	GsomConsole.log("Hello World.");
 
 
 func _input(event: InputEvent) -> void:

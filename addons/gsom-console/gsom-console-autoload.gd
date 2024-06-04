@@ -141,11 +141,12 @@ func hasCmd(cmdName: String) -> bool:
 	return _cmds.has(cmdName);
 
 
-func getMatches(text: String) -> Array:
-	if !text:
-		return [];
+func getMatches(text: String) -> Array[String]:
+	var matches: Array[String] = [];
 	
-	var matches = [];
+	if !text:
+		return matches;
+	
 	for k: String in _cvars:
 		if k.begins_with(text):
 			matches.append(k);
