@@ -1,26 +1,26 @@
 extends Node
 
-signal onChangeCvar(cvarName: String);
-signal onCmd(cmdName: String, args: Array);
-signal onToggle(isVisible: bool);
-signal onLog(richText: String);
+signal onChangeCvar(cvar_name: String);
+signal onCmd(cmd_name: String, args: Array);
+signal onToggle(is_visible: bool);
+signal onLog(rich_text: String);
 
-var _isVisible: bool = false;
+var _is_visible: bool = false;
 var _cvars: Dictionary = {};
 var _cmds: Dictionary = {};
 var _history: PackedStringArray = [];
 
 
-var _logText: String = "";
-@export var logText: String = "":
+var _log_text: String = "";
+@export var log_text: String = "":
 	get:
-		return _logText;
+		return _log_text;
 	set(v):
-		_logText = v;
+		_log_text = v;
 
-@export var isVisible: bool = false:
+@export var is_visible: bool = false:
 	get:
-		return _isVisible;
+		return _is_visible;
 	set(v):
 		self['show' if v else 'hide'].call();
 
@@ -30,20 +30,20 @@ var _logText: String = "";
 
 
 func _ready() -> void:
-	registerCmd("help", "Display available commands and variables.");
-	registerCmd("quit", "Close the application, exit to desktop.");
+	register_cmd("help", "Display available commands and variables.");
+	register_cmd("quit", "Close the application, exit to desktop.");
 	onCmd.connect(
-		func (cmdName: String, args: Array) -> void:
-			if cmdName == "help":
+		func (cmd_name: String, args: Array) -> void:
+			if cmd_name == "help":
 				_help(args);
-			elif cmdName == "quit":
+			elif cmd_name == "quit":
 				get_tree().quit();
 	);
 	
 	self.log("Type `[b][color=orange]help[/color][/b]` to view existing commands and variables.");
 
 
-const _typeNames: Dictionary = {
+const _type_names: Dictionary = {
 	TYPE_BOOL: "bool",
 	TYPE_INT: "int",
 	TYPE_FLOAT: "float",
@@ -51,97 +51,97 @@ const _typeNames: Dictionary = {
 };
 
 
-func registerCvar(cvarName: String, value: Variant, helpText: String = "") -> void:
-	if _cvars.has(cvarName) || _cmds.has(cvarName):
-		push_warning("Console.registerCvar: name '%s' already taken." % cvarName);
+func register_cvar(cvar_name: String, value: Variant, help_text: String = "") -> void:
+	if _cvars.has(cvar_name) || _cmds.has(cvar_name):
+		push_warning("GsomConsole.register_cvar: name '%s' already taken." % cvar_name);
 		return;
 	
-	var valueType = typeof(value);
-	if valueType != TYPE_BOOL && valueType != TYPE_INT && valueType != TYPE_FLOAT && valueType != TYPE_STRING:
-		push_warning("Console.registerCvar: only bool, int, float, string supported.");
+	var value_type: int = typeof(value);
+	if value_type != TYPE_BOOL && value_type != TYPE_INT && value_type != TYPE_FLOAT && value_type != TYPE_STRING:
+		push_warning("GsomConsole.register_cvar: only bool, int, float, string supported.");
 		return;
 	
-	_cvars[cvarName] = {
+	_cvars[cvar_name] = {
 		"value": value,
-		"help": helpText if !helpText.is_empty() else "[No description].",
+		"help": help_text if !help_text.is_empty() else "[No description].",
 		"hint": "",
 	};
 	
-	setCvar(cvarName, value);
+	set_cvar(cvar_name, value);
 
 
-func registerCmd(cmdName: String, helpText: String = "") -> void:
-	if _cvars.has(cmdName) || _cmds.has(cmdName):
-		push_warning("Console.registerCmd: name '%s' already taken." % cmdName);
+func register_cmd(cmd_name: String, help_text: String = "") -> void:
+	if _cvars.has(cmd_name) || _cmds.has(cmd_name):
+		push_warning("GsomConsole.register_cmd: name '%s' already taken." % cmd_name);
 		return;
 	
-	_cmds[cmdName] = {
-		"help": helpText if !helpText.is_empty() else "[No description].",
+	_cmds[cmd_name] = {
+		"help": help_text if !help_text.is_empty() else "[No description].",
 	};
 
 
-func callCmd(cmdName: String, args: Array) -> void:
-	if !_cmds.has(cmdName):
-		push_warning("Console.callCmd: CMD '%s' does not exist." % cmdName);
+func call_cmd(cmd_name: String, args: Array) -> void:
+	if !_cmds.has(cmd_name):
+		push_warning("GsomConsole.call_cmd: CMD '%s' does not exist." % cmd_name);
 		return;
 	
-	onCmd.emit(cmdName, args);
+	onCmd.emit(cmd_name, args);
 
 
-func _adjustType(oldValue: Variant, newValue: String):
-	var valueType = typeof(oldValue);
-	if valueType == TYPE_BOOL:
+func _adjust_type(oldValue: Variant, newValue: String):
+	var value_type = typeof(oldValue);
+	if value_type == TYPE_BOOL:
 		return newValue == "true" || newValue == "1";
-	elif valueType == TYPE_INT:
+	elif value_type == TYPE_INT:
 		return int(newValue);
-	elif valueType == TYPE_FLOAT:
+	elif value_type == TYPE_FLOAT:
 		return float(newValue);
-	elif valueType == TYPE_STRING:
+	elif value_type == TYPE_STRING:
 		return newValue;
 	
-	push_warning("Console.setCvar: only bool, int, float, string supported.");
+	push_warning("GsomConsole.set_cvar: only bool, int, float, string supported.");
 	return oldValue;
 
 
-func setCvar(cvarName: String, value: Variant) -> void:
-	if !_cvars.has(cvarName):
-		push_warning("Console.setCvar: CVAR %s has not been registered." % cvarName);
+func set_cvar(cvar_name: String, value: Variant) -> void:
+	if !_cvars.has(cvar_name):
+		push_warning("GsomConsole.set_cvar: CVAR %s has not been registered." % cvar_name);
 		return;
 	
-	var adjusted = _adjustType(_cvars[cvarName].value, str(value));
+	var adjusted = _adjust_type(_cvars[cvar_name].value, str(value));
 	
-	_cvars[cvarName].value = adjusted;
-	var typeValue: int = typeof(adjusted);
-	var typeName: String = _typeNames[typeValue];
+	_cvars[cvar_name].value = adjusted;
+	var type_value: int = typeof(adjusted);
+	var type_name: String = _type_names[type_value];
 	var hint: String = "[color=gray]:[/color] [color=orange]%s[/color] [color=green]%s[/color]" % [
-		typeName, adjusted
+		type_name, adjusted
 	];
-	_cvars[cvarName].hint = hint;
+	_cvars[cvar_name].hint = hint;
 	
-	onChangeCvar.emit(cvarName);
+	onChangeCvar.emit(cvar_name);
 
 
-func getCvar(cvarName: String) -> Variant:
-	if !_cvars.has(cvarName):
-		push_warning("Console.getCvar: CVAR %s has not been registered." % cvarName);
+func get_cvar(cvar_name: String) -> Variant:
+	if !_cvars.has(cvar_name):
+		push_warning("GsomConsole.get_cvar: CVAR %s has not been registered." % cvar_name);
 		return 0;
 	
-	return _cvars[cvarName].value;
+	return _cvars[cvar_name].value;
 
 
-func listCvars() -> Array:
+func list_cvars() -> Array:
 	return _cvars.keys();
 
 
-func hasCvar(cvarName: String) -> bool:
-	return _cvars.has(cvarName);
+func has_cvar(cvar_name: String) -> bool:
+	return _cvars.has(cvar_name);
 
 
-func hasCmd(cmdName: String) -> bool:
-	return _cmds.has(cmdName);
+func has_cmd(cmd_name: String) -> bool:
+	return _cmds.has(cmd_name);
 
 
-func getMatches(text: String) -> Array[String]:
+func get_matches(text: String) -> Array[String]:
 	var matches: Array[String] = [];
 	
 	if !text:
@@ -196,27 +196,27 @@ func _help(args: Array) -> void:
 
 
 func hide() -> void:
-	if !_isVisible:
+	if !_is_visible:
 		return;
 	
-	_isVisible = false;
+	_is_visible = false;
 	onToggle.emit(false);
 
 
 func show() -> void:
-	if _isVisible:
+	if _is_visible:
 		return;
 	
-	_isVisible = true;
+	_is_visible = true;
 	onToggle.emit(true);
 
 
 func toggle() -> void:
-	_isVisible = !_isVisible;
-	onToggle.emit(_isVisible);
+	_is_visible = !_is_visible;
+	onToggle.emit(_is_visible);
 
 
-func _historyPush(expression: String) -> void:
+func _history_push(expression: String) -> void:
 	var historyLen: int = _history.size();
 	if historyLen && _history[historyLen - 1] == expression:
 		return;
@@ -236,42 +236,42 @@ func submit(expression: String) -> void:
 	
 	var g0: String = groups[0].get_string();
 	
-	if self.hasCmd(g0):
+	if has_cmd(g0):
 		var args: Array = [];
 		for group in groups.slice(1):
 			@warning_ignore("unsafe_method_access")
 			args.push_back(group.get_string());
-		self.callCmd(g0, args);
-		_historyPush(expression);
+		call_cmd(g0, args);
+		_history_push(expression);
 		return;
 	
-	if groups.size() == 1 && self.hasCvar(g0):
-		var result = self.getCvar(g0);
-		var typeValue: int = typeof(result);
-		var typeName: String = _typeNames[typeValue];
+	if groups.size() == 1 && has_cvar(g0):
+		var result = get_cvar(g0);
+		var type_value: int = typeof(result);
+		var type_name: String = _type_names[type_value];
 		self.log(
-			"[color=white]%s[/color][color=gray]:[/color][color=orange]%s[/color] [color=green]%s[/color]" % [g0, typeName, result],
+			"[color=white]%s[/color][color=gray]:[/color][color=orange]%s[/color] [color=green]%s[/color]" % [g0, type_name, result],
 		);
-		_historyPush(expression);
+		_history_push(expression);
 		return;
 	
-	if groups.size() == 2 && self.hasCvar(g0):
+	if groups.size() == 2 && has_cvar(g0):
 		var g1: String = groups[1].get_string();
-		self.setCvar(g0, g1);
-		var result = self.getCvar(g0);
-		var typeValue: int = typeof(result);
-		var typeName: String = _typeNames[typeValue];
+		set_cvar(g0, g1);
+		var result = get_cvar(g0);
+		var type_value: int = typeof(result);
+		var type_name: String = _type_names[type_value];
 		self.log(
-			"[color=white]%s[/color][color=gray]:[/color][color=orange]%s[/color] [color=green]%s[/color]" % [g0, typeName, result],
+			"[color=white]%s[/color][color=gray]:[/color][color=orange]%s[/color] [color=green]%s[/color]" % [g0, type_name, result],
 		);
-		_historyPush(expression);
+		_history_push(expression);
 		return;
 	
-	self.error("Unrecognized command `%s`." % [expression]);
+	error("Unrecognized command `%s`." % [expression]);
 
 
 func log(msg: String) -> void:
-	_logText += msg + "\n";
+	_log_text += msg + "\n";
 	onLog.emit(msg);
 
 

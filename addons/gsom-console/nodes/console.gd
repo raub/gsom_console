@@ -5,199 +5,199 @@ const MIN_HEIGHT: float = 320;
 
 @onready var _draggable: Control = $Draggable;
 @onready var _blur: Control = $Panel/Blur;
-@onready var _labelLog: RichTextLabel = $Panel/ColumnMain/BgLog/LabelLog;
-@onready var _buttonClose: Button = $Panel/ColumnMain/RowTitle/ButtonClose;
-@onready var _buttonSubmit: Button = $Panel/ColumnMain/RowInput/ButtonSubmit;
-@onready var _editCmd: LineEdit = $Panel/ColumnMain/RowInput/ContainerCmd/EditCmd;
-@onready var _containerHint: Control = $Panel/ColumnMain/BgLog/ContainerHint;
-@onready var _columnHint: Control = $Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint;
-@onready var _resizeTop: Control = $Resizers/ResizeTop;
-@onready var _resizeBottom: Control = $Resizers/ResizeBottom;
-@onready var _resizeLeft: Control = $Resizers/ResizeLeft;
-@onready var _resizeRight: Control = $Resizers/ResizeRight;
+@onready var _label_log: RichTextLabel = $Panel/ColumnMain/BgLog/LabelLog;
+@onready var _button_close: Button = $Panel/ColumnMain/RowTitle/ButtonClose;
+@onready var _button_submit: Button = $Panel/ColumnMain/RowInput/ButtonSubmit;
+@onready var _edit_cmd: LineEdit = $Panel/ColumnMain/RowInput/ContainerCmd/EditCmd;
+@onready var _container_hint: Control = $Panel/ColumnMain/BgLog/ContainerHint;
+@onready var _column_hint: Control = $Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint;
+@onready var _resize_top: Control = $Resizers/ResizeTop;
+@onready var _resize_bottom: Control = $Resizers/ResizeBottom;
+@onready var _resize_left: Control = $Resizers/ResizeLeft;
+@onready var _resize_right: Control = $Resizers/ResizeRight;
 
 
-var _isDrag: bool = false;
-var _isResize: bool = false;
-var _grabPosMouse := Vector2();
-var _grabPosWrapper := Vector2();
-var _grabSize := Vector2();
-var _isHint: bool = false;
-var _listHint: Array[String] = [];
-var _isHistory: bool = false;
+var _is_drag: bool = false;
+var _is_resize: bool = false;
+var _grab_pos_mouse := Vector2();
+var _grab_pos_wrapper := Vector2();
+var _grab_size := Vector2();
+var _is_hint: bool = false;
+var _list_hint: Array[String] = [];
+var _is_history: bool = false;
 var _index: int = 0;
 
 
-var _wrapperPos: Vector2 = Vector2.ZERO:
+var _wrapper_pos: Vector2 = Vector2.ZERO:
 	get:
 		return get_parent().position;
 	set(v):
 		get_parent().position = v;
 
 
-var _wrapperSize: Vector2 = Vector2(MIN_WIDTH, MIN_HEIGHT):
+var _wrapper_size: Vector2 = Vector2(MIN_WIDTH, MIN_HEIGHT):
 	get:
 		return get_parent().size;
 	set(v):
 		get_parent().size = v;
 
-var _wrapperWigth: float = MIN_WIDTH:
+var _wrapper_wigth: float = MIN_WIDTH:
 	get:
-		return _wrapperSize.x;
+		return _wrapper_size.x;
 	set(v):
-		_wrapperSize.x = v;
+		_wrapper_size.x = v;
 
-var _wrapperHeight: float = MIN_HEIGHT:
+var _wrapper_height: float = MIN_HEIGHT:
 	get:
-		return _wrapperSize.y;
+		return _wrapper_size.y;
 	set(v):
-		_wrapperSize.y = v;
+		_wrapper_size.y = v;
 
 
-var _viewSize: Vector2 = Vector2(MIN_WIDTH, MIN_HEIGHT):
+var _view_size: Vector2 = Vector2(MIN_WIDTH, MIN_HEIGHT):
 	get:
 		return get_viewport().size;
 
 
 var _viewWigth: float = MIN_WIDTH:
 	get:
-		return _viewSize.x;
+		return _view_size.x;
 
 var _viewHeight: float = MIN_HEIGHT:
 	get:
-		return _viewSize.y;
+		return _view_size.y;
 
 
 func _ready() -> void:
-	_draggable.gui_input.connect(_handleInputDrag);
-	_editCmd.gui_input.connect(_handleEditKeys);
-	_resizeTop.gui_input.connect(_handleInputResizeTop);
-	_resizeBottom.gui_input.connect(_handleInputResizeBottom);
-	_resizeLeft.gui_input.connect(_handleInputResizeLeft);
-	_resizeRight.gui_input.connect(_handleInputResizeRight);
+	_draggable.gui_input.connect(_handle_input_drag);
+	_edit_cmd.gui_input.connect(_handle_edit_keys);
+	_resize_top.gui_input.connect(_handle_input_resize_top);
+	_resize_bottom.gui_input.connect(_handle_input_resize_bottom);
+	_resize_left.gui_input.connect(_handle_input_resize_left);
+	_resize_right.gui_input.connect(_handle_input_resize_right);
 	
-	GsomConsole.onToggle.connect(_handleVisibility);
-	_handleVisibility(GsomConsole.isVisible);
+	GsomConsole.onToggle.connect(_handle_visibility);
+	_handle_visibility(GsomConsole.isVisible);
 	
-	GsomConsole.onLog.connect(_handleLogChange);
-	_handleLogChange();
+	GsomConsole.onLog.connect(_handle_log_change);
+	_handle_log_change();
 	
-	_buttonClose.pressed.connect(GsomConsole.hide);
-	_buttonSubmit.pressed.connect(_handleSubmit);
-	_editCmd.text_submitted.connect(_handleSubmit);
+	_button_close.pressed.connect(GsomConsole.hide);
+	_button_submit.pressed.connect(_handle_submit);
+	_edit_cmd.text_submitted.connect(_handle_submit);
 	
-	_editCmd.text_changed.connect(_handleTextChange);
-	_handleTextChange(_editCmd.text);
+	_edit_cmd.text_changed.connect(_handle_text_change);
+	_handle_text_change(_edit_cmd.text);
 	
-	for child: Button in _columnHint.get_children():
-		child.pressed.connect(_handleHintButton.bind(child));
+	for child: Button in _column_hint.get_children():
+		child.pressed.connect(_handle_hint_button.bind(child));
 
 
 #region Console Input Handlers
 
-func _handleVisibility(isVisible: bool) -> void:
+func _handle_visibility(isVisible: bool) -> void:
 	visible = isVisible;
 	if isVisible:
-		_editCmd.grab_focus();
+		_edit_cmd.grab_focus();
 	else:
-		_editCmd.text = "";
-		_resetHintState();
+		_edit_cmd.text = "";
+		_reset_hint_state();
 
 
-func _handleLogChange(_text: String = "") -> void:
-	_labelLog.text = GsomConsole.logText;
+func _handle_log_change(_text: String = "") -> void:
+	_label_log.text = GsomConsole.logText;
 
 
-func _handleHintButton(sender: Button) -> void:
+func _handle_hint_button(sender: Button) -> void:
 	_applyHint(sender.text);
 
 
-func _handleTextChange(text: String) -> void:
-	_buttonSubmit.disabled = !text;
+func _handle_text_change(text: String) -> void:
+	_button_submit.disabled = !text;
 	
-	_isHistory = false;
+	_is_history = false;
 	_index = 0;
 	
 	if !text:
-		_containerHint.visible = false;
-		_isHint = false;
-		_renderHints();
+		_container_hint.visible = false;
+		_is_hint = false;
+		_render_hints();
 		return;
 	
-	var matchList: Array[String] = GsomConsole.getMatches(text);
-	if !matchList.size():
+	var match_list: Array[String] = GsomConsole.getMatches(text);
+	if !match_list.size():
 		return;
 	
-	_listHint = matchList.duplicate();
-	_containerHint.visible = true;
-	_renderHints();
+	_list_hint = match_list.duplicate();
+	_container_hint.visible = true;
+	_render_hints();
 
 
-func _handleSubmit(_text: String = "") -> void:
-	var cmd: String = _editCmd.text;
+func _handle_submit(_text: String = "") -> void:
+	var cmd: String = _edit_cmd.text;
 	
-	if !_isHint:
-		_resetHintState();
+	if !_is_hint:
+		_reset_hint_state();
 		
 		if !cmd:
 			return;
 		
-		_editCmd.text = "";
+		_edit_cmd.text = "";
 		GsomConsole.submit(cmd);
 		return;
 	
-	_applyFromList();
+	_apply_from_list();
 
 
-func _handleEditKeys(event: InputEvent) -> void:
+func _handle_edit_keys(event: InputEvent) -> void:
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		return;
 	
 	elif event is InputEventKey:
-		_handleKey(event);
+		_handle_key(event);
 
 
-func _handleKey(event: InputEventKey) -> void:
-	if event.keycode == KEY_UP || event.keycode == KEY_DOWN || (_isHint && event.keycode == KEY_ESCAPE):
-		_editCmd.accept_event();
+func _handle_key(event: InputEventKey) -> void:
+	if event.keycode == KEY_UP || event.keycode == KEY_DOWN || (_is_hint && event.keycode == KEY_ESCAPE):
+		_edit_cmd.accept_event();
 	
 	if !event.is_pressed():
-		if (_isHint && event.keycode == KEY_ESCAPE):
-			_resetHintState();
+		if (_is_hint && event.keycode == KEY_ESCAPE):
+			_reset_hint_state();
 		return;
 	
-	var cmd: String = _editCmd.text;
+	var cmd: String = _edit_cmd.text;
 	if event.keycode == KEY_UP:
-		if _containerHint.visible:
-			if _isHint:
+		if _container_hint.visible:
+			if _is_hint:
 				_index += 1;
 			else:
-				_isHint = true;
+				_is_hint = true;
 				_index = 0;
-			_renderHints();
+			_render_hints();
 			return;
 		
 		if !cmd:
 			if !GsomConsole.history.size():
 				return;
-			_listHint = GsomConsole.history.duplicate();
-			_listHint.reverse();
-			_isHistory = true;
+			_list_hint = GsomConsole.history.duplicate();
+			_list_hint.reverse();
+			_is_history = true;
 			_index = 0;
-			_containerHint.visible = true;
-			_isHint = true;
-			_renderHints();
+			_container_hint.visible = true;
+			_is_hint = true;
+			_render_hints();
 			return;
 		return;
 	
 	if event.keycode == KEY_DOWN:
-		if _containerHint.visible:
-			if _isHint:
+		if _container_hint.visible:
+			if _is_hint:
 				_index -= 1;
 			else:
-				_isHint = true;
+				_is_hint = true;
 				_index = 0;
-			_renderHints();
+			_render_hints();
 			return;
 		
 		return;
@@ -206,69 +206,69 @@ func _handleKey(event: InputEventKey) -> void:
 
 #region Hints View
 
-func _applyFromList() -> void:
-	var listLen: int = _listHint.size();
-	if !listLen:
+func _apply_from_list() -> void:
+	var list_len: int = _list_hint.size();
+	if !list_len:
 		return;
-	var indexFinal: int = _getPositiveIndex();
-	_applyHint(_listHint[indexFinal]);
+	var index_final: int = _get_positive_index();
+	_applyHint(_list_hint[index_final]);
 
 
-func _resetHintState() -> void:
-	_containerHint.visible = false;
-	_isHistory = false;
-	_isHint = false;
+func _reset_hint_state() -> void:
+	_container_hint.visible = false;
+	_is_history = false;
+	_is_hint = false;
 	_index = 0;
-	_listHint = [];
-	_renderHints();
+	_list_hint = [];
+	_render_hints();
 
 
 func _applyHint(text: String) -> void:
-	_editCmd.text = text;
-	_editCmd.caret_column = text.length();
-	_resetHintState();
+	_edit_cmd.text = text;
+	_edit_cmd.caret_column = text.length();
+	_reset_hint_state();
 
 
-func _renderHints() -> void:
-	if !_containerHint.visible:
+func _render_hints() -> void:
+	if !_container_hint.visible:
 		return;
 		
-	var subRange: Array[int] = _getSublist();
-	var sublist: Array[String] = _listHint.slice(subRange[0], subRange[1]) as Array[String];
+	var sub_range: Array[int] = _getSublist();
+	var sublist: Array[String] = _list_hint.slice(sub_range[0], sub_range[1]) as Array[String];
 	var sublen: int = sublist.size();
-	var children: Array[Node] = _columnHint.get_children();
-	var childcount: int = children.size();
-	var listLen: int = _listHint.size();
-	var indexFinal: int = _getPositiveIndex();
-	var text: String = _listHint[indexFinal];
+	var children: Array[Node] = _column_hint.get_children();
+	var child_count: int = children.size();
+	var list_len: int = _list_hint.size();
+	var index_final: int = _get_positive_index();
+	var text: String = _list_hint[index_final];
 	
-	for i in range(0, childcount):
-		var idx: int = childcount - 1 - i;
+	for i in range(0, child_count):
+		var idx: int = child_count - 1 - i;
 		children[idx].visible = i < sublen;
 		if i < sublen:
 			children[idx].text = sublist[i];
-			children[idx].flat = !_isHint || (subRange[0] + i != indexFinal);
+			children[idx].flat = !_is_hint || (sub_range[0] + i != index_final);
 
 
-# Convert `_index` to pozitive and keep within `_listHint` bounds
-func _getPositiveIndex() -> int:
-	var listLen: int = _listHint.size();
-	return ((_index % listLen) + listLen) % listLen;
+# Convert `_index` to pozitive and keep within `_list_hint` bounds
+func _get_positive_index() -> int:
+	var list_len: int = _list_hint.size();
+	return ((_index % list_len) + list_len) % list_len;
 
 
 # Calculate start and end indices of sublist to render
 # Returns pair as array: [startIndex, endIndex]
 func _getSublist() -> Array[int]:
-	var listLen: int = _listHint.size();
-	if listLen < 5:
-		return [0, listLen];
+	var list_len: int = _list_hint.size();
+	if list_len < 5:
+		return [0, list_len];
 	
-	var indexFinal: int = _getPositiveIndex();
-	if indexFinal < 3:
+	var index_final: int = _get_positive_index();
+	if index_final < 3:
 		return [0, 4];
 	
-	var indexLast: int = listLen - 1;
-	var endAt: int = min(indexFinal + 2, listLen);
+	var index_last: int = list_len - 1;
+	var endAt: int = min(index_final + 2, list_len);
 	var startAt: int = endAt - 4;
 	
 	return [startAt, endAt];
@@ -277,127 +277,127 @@ func _getSublist() -> Array[int]:
 
 #region Drag Handlers
 
-func _handleInputDrag(event: InputEvent) -> void:
+func _handle_input_drag(event: InputEvent) -> void:
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		return;
 	
 	if event is InputEventMouseButton:
-		_handleMouseButtonDrag(event);
+		_handle_mouse_button_drag(event);
 	elif event is InputEventMouseMotion:
-		_handleMouseMoveDrag(event);
+		_handle_mouse_move_drag(event);
 
 
-func _handleMouseButtonDrag(event: InputEventMouseButton) -> void:
+func _handle_mouse_button_drag(event: InputEventMouseButton) -> void:
 	if event.button_index != MOUSE_BUTTON_LEFT:
 		return;
 	
 	if event.pressed:
-		_isDrag = true;
-		_grabPosMouse = event.global_position - _wrapperPos;
+		_is_drag = true;
+		_grab_pos_mouse = event.global_position - _wrapper_pos;
 	else:
-		_isDrag = false;
+		_is_drag = false;
 
 
-func _handleMouseMoveDrag(event: InputEventMouseMotion) -> void:
-	if !_isDrag:
+func _handle_mouse_move_drag(event: InputEventMouseMotion) -> void:
+	if !_is_drag:
 		return;
 		
-	_wrapperPos = event.global_position - _grabPosMouse;
+	_wrapper_pos = event.global_position - _grab_pos_mouse;
 
 #endregion
 
 #region Resize Handlers
 
-func _handleMouseButtonResize(event: InputEventMouseButton) -> void:
+func _handle_mouse_button_resize(event: InputEventMouseButton) -> void:
 	if event.button_index != MOUSE_BUTTON_LEFT:
 		return;
 	
 	if event.pressed:
-		_isResize = true;
-		_grabSize = _wrapperSize;
-		_grabPosWrapper = _wrapperPos;
-		_grabPosMouse = event.global_position;
+		_is_resize = true;
+		_grab_size = _wrapper_size;
+		_grab_pos_wrapper = _wrapper_pos;
+		_grab_pos_mouse = event.global_position;
 	else:
-		_isResize = false;
+		_is_resize = false;
 
 
-func _handleInputResizeTop(event: InputEvent) -> void:
+func _handle_input_resize_top(event: InputEvent) -> void:
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		return;
 	
 	if event is InputEventMouseButton:
-		_handleMouseButtonResize(event);
-	elif event is InputEventMouseMotion and _isResize:
-		_handleMouseMoveResizeTop(event);
+		_handle_mouse_button_resize(event);
+	elif event is InputEventMouseMotion and _is_resize:
+		_handle_mouse_move_resize_top(event);
 
 
-func _handleInputResizeBottom(event: InputEvent) -> void:
+func _handle_input_resize_bottom(event: InputEvent) -> void:
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		return;
 	
 	if event is InputEventMouseButton:
-		_handleMouseButtonResize(event);
-	elif event is InputEventMouseMotion and _isResize:
-		_handleMouseMoveResizeBottom(event);
+		_handle_mouse_button_resize(event);
+	elif event is InputEventMouseMotion and _is_resize:
+		_handle_mouse_move_resize_bottom(event);
 
 
-func _handleInputResizeLeft(event: InputEvent) -> void:
+func _handle_input_resize_left(event: InputEvent) -> void:
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		return;
 	
 	if event is InputEventMouseButton:
-		_handleMouseButtonResize(event);
-	elif event is InputEventMouseMotion and _isResize:
-		_handleMouseMoveResizeLeft(event);
+		_handle_mouse_button_resize(event);
+	elif event is InputEventMouseMotion and _is_resize:
+		_handle_mouse_move_resize_left(event);
 
 
-func _handleInputResizeRight(event: InputEvent) -> void:
+func _handle_input_resize_right(event: InputEvent) -> void:
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		return;
 	
 	if event is InputEventMouseButton:
-		_handleMouseButtonResize(event);
-	elif event is InputEventMouseMotion and _isResize:
-		_handleMouseMoveResizeRight(event);
+		_handle_mouse_button_resize(event);
+	elif event is InputEventMouseMotion and _is_resize:
+		_handle_mouse_move_resize_right(event);
 
 
-func _handleMouseMoveResizeTop(event: InputEventMouseMotion) -> void:
-	var dy: float = event.global_position.y - _grabPosMouse.y;
-	var newY: float = clamp(_grabPosWrapper.y + dy, 0.0, _viewHeight);
-	var newH: float = _grabSize.y + (_grabPosMouse.y - newY);
+func _handle_mouse_move_resize_top(event: InputEventMouseMotion) -> void:
+	var dy: float = event.global_position.y - _grab_pos_mouse.y;
+	var newY: float = clamp(_grab_pos_wrapper.y + dy, 0.0, _viewHeight);
+	var newH: float = _grab_size.y + (_grab_pos_mouse.y - newY);
 	if newH < MIN_HEIGHT:
 		return;
 	
-	_wrapperPos.y = newY;
-	_wrapperHeight = newH;
+	_wrapper_pos.y = newY;
+	_wrapper_height = newH;
 
 
-func _handleMouseMoveResizeBottom(event: InputEventMouseMotion) -> void:
-	var dy: float = event.global_position.y - _grabPosMouse.y;
-	var newH: float = _grabSize.y + dy;
-	if newH < MIN_HEIGHT || (newH + _grabPosWrapper.y > _viewHeight):
+func _handle_mouse_move_resize_bottom(event: InputEventMouseMotion) -> void:
+	var dy: float = event.global_position.y - _grab_pos_mouse.y;
+	var newH: float = _grab_size.y + dy;
+	if newH < MIN_HEIGHT || (newH + _grab_pos_wrapper.y > _viewHeight):
 		return;
 	
-	_wrapperHeight = newH;
+	_wrapper_height = newH;
 
 
-func _handleMouseMoveResizeLeft(event: InputEventMouseMotion) -> void:
-	var dx: float = event.global_position.x - _grabPosMouse.x;
-	var newX: float = clamp(_grabPosWrapper.x + dx, 0.0, _viewWigth);
-	var newW: float = _grabSize.x + (_grabPosMouse.x - newX);
+func _handle_mouse_move_resize_left(event: InputEventMouseMotion) -> void:
+	var dx: float = event.global_position.x - _grab_pos_mouse.x;
+	var newX: float = clamp(_grab_pos_wrapper.x + dx, 0.0, _viewWigth);
+	var newW: float = _grab_size.x + (_grab_pos_mouse.x - newX);
 	if newW < MIN_WIDTH:
 		return;
 	
-	_wrapperPos.x = newX;
-	_wrapperWigth = newW;
+	_wrapper_pos.x = newX;
+	_wrapper_wigth = newW;
 
 
-func _handleMouseMoveResizeRight(event: InputEventMouseMotion) -> void:
-	var dx: float = event.global_position.x - _grabPosMouse.x;
-	var newW: float = _grabSize.x + dx;
-	if newW < MIN_WIDTH || (newW + _grabPosWrapper.x > _viewWigth):
+func _handle_mouse_move_resize_right(event: InputEventMouseMotion) -> void:
+	var dx: float = event.global_position.x - _grab_pos_mouse.x;
+	var newW: float = _grab_size.x + dx;
+	if newW < MIN_WIDTH || (newW + _grab_pos_wrapper.x > _viewWigth):
 		return;
 	
-	_wrapperWigth = newW;
+	_wrapper_wigth = newW;
 
 #endregion
