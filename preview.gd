@@ -19,6 +19,6 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		var key_event := event as InputEventKey
-		if key_event.is_action("Console") && Input.is_action_just_pressed("Console"):
+		if key_event.is_action("Console") and Input.is_action_just_pressed("Console"):
 			GsomConsole.toggle()
 			accept_event()

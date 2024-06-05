@@ -5,7 +5,7 @@ uniform vec4 color: source_color = vec4(0.0, 0.0, 0.0, 0.3);
 uniform sampler2D SCREEN_TEXTURE: hint_screen_texture, filter_linear_mipmap;
 
 void fragment() {
-	vec4 tex = texture(SCREEN_TEXTURE, SCREEN_UV, blur);
-	vec4 final = mix(tex, color, color.a);
-	COLOR = vec4(final.rgb, 1.0);
+	vec3 tex = texture(SCREEN_TEXTURE, SCREEN_UV, blur).rgb;
+	vec3 final = mix(tex, color.rgb, color.a);
+	COLOR = vec4(final, 1.0);
 }

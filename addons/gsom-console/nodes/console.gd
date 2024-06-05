@@ -158,11 +158,11 @@ func _handle_edit_keys(event: InputEvent) -> void:
 
 
 func _handle_key(event: InputEventKey) -> void:
-	if event.keycode == KEY_UP || event.keycode == KEY_DOWN || (_is_hint && event.keycode == KEY_ESCAPE):
+	if event.keycode == KEY_UP or event.keycode == KEY_DOWN or (_is_hint and event.keycode == KEY_ESCAPE):
 		_edit_cmd.accept_event()
 	
 	if !event.is_pressed():
-		if (_is_hint && event.keycode == KEY_ESCAPE):
+		if (_is_hint and event.keycode == KEY_ESCAPE):
 			_reset_hint_state()
 		return
 	
@@ -247,7 +247,7 @@ func _render_hints() -> void:
 		children[idx].visible = i < sublen
 		if i < sublen:
 			children[idx].text = sublist[i]
-			children[idx].flat = !_is_hint || (sub_range[0] + i != index_final)
+			children[idx].flat = !_is_hint or (sub_range[0] + i != index_final)
 
 
 # Convert `_index` to pozitive and keep within `_list_hint` bounds
@@ -375,7 +375,7 @@ func _handle_mouse_move_resize_top(event: InputEventMouseMotion) -> void:
 func _handle_mouse_move_resize_bottom(event: InputEventMouseMotion) -> void:
 	var dy: float = event.global_position.y - _grab_pos_mouse.y
 	var newH: float = _grab_size.y + dy
-	if newH < _MIN_HEIGHT || (newH + _grab_pos_wrapper.y > _viewHeight):
+	if newH < _MIN_HEIGHT or (newH + _grab_pos_wrapper.y > _viewHeight):
 		return
 	
 	_wrapper_height = newH
@@ -395,7 +395,7 @@ func _handle_mouse_move_resize_left(event: InputEventMouseMotion) -> void:
 func _handle_mouse_move_resize_right(event: InputEventMouseMotion) -> void:
 	var dx: float = event.global_position.x - _grab_pos_mouse.x
 	var newW: float = _grab_size.x + dx
-	if newW < _MIN_WIDTH || (newW + _grab_pos_wrapper.x > _viewWigth):
+	if newW < _MIN_WIDTH or (newW + _grab_pos_wrapper.x > _viewWigth):
 		return
 	
 	_wrapper_wigth = newW
