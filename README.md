@@ -27,6 +27,8 @@ doesn't do anything specific per CMD call - only emits the `called_cmd` signal.
 * `do_something abc -1 20 true 3.3` -> will
     emit `called_cmd.emit("do_something", ["abc", "-1", "20", "true", "3.3"])`.
 
+See [example](preview.gd) script.
+
 
 ## GsomConsole
 
