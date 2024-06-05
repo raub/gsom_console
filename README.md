@@ -37,7 +37,7 @@ It holds all the common console logic and is not tied to any specific UI.
 
 * `signal changed_cvar(cvar_name: String)` - a CVAR has been changed.
     You may fetch its updated value with `get_cvar(cvar_name)` and react to the change.
-* `signal called_cmd(cmd_name: String, args: Array)` - a CMD was called.
+* `signal called_cmd(cmd_name: String, args: PackedStringArray)` - a CMD was called.
     All listeners will receive the command name and list of args.
 * `signal toggled(is_visible: bool)` - console visibility toggled.
     This is optional - if you use the default visibility logic that comes with this singleton.
@@ -59,14 +59,14 @@ It holds all the common console logic and is not tied to any specific UI.
     CVAR available with default value and optional help note.
 * `register_cmd(cmd_name: String, help_text: String = "") -> void` - makes a new
     CMD available with an optional help note.
-* `call_cmd(cmd_name: String, args: Array) -> void` - manually call a command,
+* `call_cmd(cmd_name: String, args: PackedStringArray) -> void` - manually call a command,
     as if the call was parsed from user input.
 * `set_cvar(cvar_name: String, value: Variant) -> void` - assign new value to the CVAR.
 * `get_cvar(cvar_name: String) -> Variant` - inspect the current CVAR value.
 * `list_cvars() -> Array` - list all CVAR names.
 * `has_cvar(cvar_name: String) -> bool` - check if there is a CVAR with given name.
 * `has_cmd(cmd_name: String) -> bool` - check if there is a CMD with given name.
-* `get_matches(text: String) -> Array` - get a list of CVAR and CMD names that start with the given `text`.
+* `get_matches(text: String) -> PackedStringArray` - get a list of CVAR and CMD names that start with the given `text`.
 * `hide() -> void` - set `is_visible` to `false` if it was `true`.
     Only emits `toggled` if indeed changed.
 * `show() -> void` - set `is_visible` to `true` if it was `false`.
