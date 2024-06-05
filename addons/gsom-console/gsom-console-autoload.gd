@@ -1,38 +1,51 @@
 extends Node
 
-signal onChangeCvar(cvar_name: String);
-signal onCmd(cmd_name: String, args: Array);
-signal onToggle(is_visible: bool);
-signal onLog(rich_text: String);
+signal changed_cvar(cvar_name: String);
+signal called_cmd(cmd_name: String, args: Array);
+signal toggled(is_visible: bool);
+signal logged(rich_text: String);
 
-var _is_visible: bool = false;
-var _cvars: Dictionary = {};
-var _cmds: Dictionary = {};
-var _history: PackedStringArray = [];
+
+const _TYPE_NAMES: Dictionary = {
+	TYPE_BOOL: "bool",
+	TYPE_INT: "int",
+	TYPE_FLOAT: "float",
+	TYPE_STRING: "String",
+};
 
 
 var _log_text: String = "";
+## Full content of the logged text.
 @export var log_text: String = "":
 	get:
 		return _log_text;
 	set(v):
 		_log_text = v;
 
+
+var _is_visible: bool = false;
+## Full content of the logged text.
 @export var is_visible: bool = false:
 	get:
 		return _is_visible;
 	set(v):
 		self['show' if v else 'hide'].call();
 
+
+var _history: PackedStringArray = [];
 @export var history: PackedStringArray = []:
 	get:
 		return _history;
 
 
+var _cvars: Dictionary = {};
+var _cmds: Dictionary = {};
+
+
 func _ready() -> void:
 	register_cmd("help", "Display available commands and variables.");
 	register_cmd("quit", "Close the application, exit to desktop.");
-	onCmd.connect(
+	called_cmd.connect(
 		func (cmd_name: String, args: Array) -> void:
 			if cmd_name == "help":
 				_help(args);
@@ -41,14 +54,6 @@ func _ready() -> void:
 	);
 	
 	self.log("Type `[b][color=orange]help[/color][/b]` to view existing commands and variables.");
-
-
-const _type_names: Dictionary = {
-	TYPE_BOOL: "bool",
-	TYPE_INT: "int",
-	TYPE_FLOAT: "float",
-	TYPE_STRING: "String",
-};
 
 
 func register_cvar(cvar_name: String, value: Variant, help_text: String = "") -> void:
@@ -85,22 +90,7 @@ func call_cmd(cmd_name: String, args: Array) -> void:
 		push_warning("GsomConsole.call_cmd: CMD '%s' does not exist." % cmd_name);
 		return;
 	
-	onCmd.emit(cmd_name, args);
-
-
-func _adjust_type(oldValue: Variant, newValue: String):
-	var value_type = typeof(oldValue);
-	if value_type == TYPE_BOOL:
-		return newValue == "true" || newValue == "1";
-	elif value_type == TYPE_INT:
-		return int(newValue);
-	elif value_type == TYPE_FLOAT:
-		return float(newValue);
-	elif value_type == TYPE_STRING:
-		return newValue;
-	
-	push_warning("GsomConsole.set_cvar: only bool, int, float, string supported.");
-	return oldValue;
+	called_cmd.emit(cmd_name, args);
 
 
 func set_cvar(cvar_name: String, value: Variant) -> void:
@@ -112,13 +102,13 @@ func set_cvar(cvar_name: String, value: Variant) -> void:
 	
 	_cvars[cvar_name].value = adjusted;
 	var type_value: int = typeof(adjusted);
-	var type_name: String = _type_names[type_value];
+	var type_name: String = _TYPE_NAMES[type_value];
 	var hint: String = "[color=gray]:[/color] [color=orange]%s[/color] [color=green]%s[/color]" % [
 		type_name, adjusted
 	];
 	_cvars[cvar_name].hint = hint;
 	
-	onChangeCvar.emit(cvar_name);
+	changed_cvar.emit(cvar_name);
 
 
 func get_cvar(cvar_name: String) -> Variant:
@@ -141,8 +131,8 @@ func has_cmd(cmd_name: String) -> bool:
 	return _cmds.has(cmd_name);
 
 
-func get_matches(text: String) -> Array[String]:
-	var matches: Array[String] = [];
+func get_matches(text: String) -> PackedStringArray:
+	var matches: PackedStringArray = [];
 	
 	if !text:
 		return matches;
@@ -156,6 +146,109 @@ func get_matches(text: String) -> Array[String]:
 			matches.append(k);
 	
 	return matches;
+
+
+func hide() -> void:
+	if !_is_visible:
+		return;
+	
+	_is_visible = false;
+	toggled.emit(false);
+
+
+func show() -> void:
+	if _is_visible:
+		return;
+	
+	_is_visible = true;
+	toggled.emit(true);
+
+
+func toggle() -> void:
+	_is_visible = !_is_visible;
+	toggled.emit(_is_visible);
+
+
+func submit(expression: String) -> void:
+	var trimmed: String = expression.strip_edges(true, true);
+	
+	var r = RegEx.new();
+	r.compile("\\S+"); # negated whitespace character class
+	var groups: Array[RegExMatch] = r.search_all(trimmed);
+	
+	if groups.size() < 1:
+		return;
+	
+	var g0: String = groups[0].get_string();
+	
+	if has_cmd(g0):
+		var args: Array = [];
+		for group in groups.slice(1):
+			@warning_ignore("unsafe_method_access")
+			args.push_back(group.get_string());
+		call_cmd(g0, args);
+		_history_push(expression);
+		return;
+	
+	if groups.size() == 1 && has_cvar(g0):
+		var result = get_cvar(g0);
+		var type_value: int = typeof(result);
+		var type_name: String = _TYPE_NAMES[type_value];
+		self.log(
+			"[color=white]%s[/color][color=gray]:[/color][color=orange]%s[/color] [color=green]%s[/color]" % [g0, type_name, result],
+		);
+		_history_push(expression);
+		return;
+	
+	if groups.size() == 2 && has_cvar(g0):
+		var g1: String = groups[1].get_string();
+		set_cvar(g0, g1);
+		var result = get_cvar(g0);
+		var type_value: int = typeof(result);
+		var type_name: String = _TYPE_NAMES[type_value];
+		self.log(
+			"[color=white]%s[/color][color=gray]:[/color][color=orange]%s[/color] [color=green]%s[/color]" % [g0, type_name, result],
+		);
+		_history_push(expression);
+		return;
+	
+	error("Unrecognized command `%s`." % [expression]);
+
+
+func log(msg: String) -> void:
+	_log_text += msg + "\n";
+	logged.emit(msg);
+
+
+func info(msg: String) -> void:
+	self.log("[color=#B9B4F8][b]info:[/b] %s[/color]" % msg);
+
+
+func debug(msg: String) -> void:
+	self.log("[color=#9FD1D6][b]dbg:[/b] %s[/color]" % msg);
+
+
+func warn(msg: String) -> void:
+	self.log("[color=#F89D2C][b]warn:[/b] %s[/color]" % msg);
+
+
+func error(msg: String) -> void:
+	self.log("[color=#E81608][b]err:[/b] %s[/color]" % msg);
+
+
+func _adjust_type(oldValue: Variant, newValue: String):
+	var value_type = typeof(oldValue);
+	if value_type == TYPE_BOOL:
+		return newValue == "true" || newValue == "1";
+	elif value_type == TYPE_INT:
+		return int(newValue);
+	elif value_type == TYPE_FLOAT:
+		return float(newValue);
+	elif value_type == TYPE_STRING:
+		return newValue;
+	
+	push_warning("GsomConsole.set_cvar: only bool, int, float, string supported.");
+	return oldValue;
 
 
 func _help(args: Array) -> void:
@@ -195,97 +288,9 @@ func _help(args: Array) -> void:
 	self.log("".join(PackedStringArray(result)));
 
 
-func hide() -> void:
-	if !_is_visible:
-		return;
-	
-	_is_visible = false;
-	onToggle.emit(false);
-
-
-func show() -> void:
-	if _is_visible:
-		return;
-	
-	_is_visible = true;
-	onToggle.emit(true);
-
-
-func toggle() -> void:
-	_is_visible = !_is_visible;
-	onToggle.emit(_is_visible);
-
-
 func _history_push(expression: String) -> void:
 	var historyLen: int = _history.size();
 	if historyLen && _history[historyLen - 1] == expression:
 		return;
 	
 	_history.append(expression);
-
-
-func submit(expression: String) -> void:
-	var trimmed: String = expression.strip_edges(true, true);
-	
-	var r = RegEx.new();
-	r.compile("\\S+"); # negated whitespace character class
-	var groups: Array[RegExMatch] = r.search_all(trimmed);
-	
-	if groups.size() < 1:
-		return;
-	
-	var g0: String = groups[0].get_string();
-	
-	if has_cmd(g0):
-		var args: Array = [];
-		for group in groups.slice(1):
-			@warning_ignore("unsafe_method_access")
-			args.push_back(group.get_string());
-		call_cmd(g0, args);
-		_history_push(expression);
-		return;
-	
-	if groups.size() == 1 && has_cvar(g0):
-		var result = get_cvar(g0);
-		var type_value: int = typeof(result);
-		var type_name: String = _type_names[type_value];
-		self.log(
-			"[color=white]%s[/color][color=gray]:[/color][color=orange]%s[/color] [color=green]%s[/color]" % [g0, type_name, result],
-		);
-		_history_push(expression);
-		return;
-	
-	if groups.size() == 2 && has_cvar(g0):
-		var g1: String = groups[1].get_string();
-		set_cvar(g0, g1);
-		var result = get_cvar(g0);
-		var type_value: int = typeof(result);
-		var type_name: String = _type_names[type_value];
-		self.log(
-			"[color=white]%s[/color][color=gray]:[/color][color=orange]%s[/color] [color=green]%s[/color]" % [g0, type_name, result],
-		);
-		_history_push(expression);
-		return;
-	
-	error("Unrecognized command `%s`." % [expression]);
-
-
-func log(msg: String) -> void:
-	_log_text += msg + "\n";
-	onLog.emit(msg);
-
-
-func info(msg: String) -> void:
-	self.log("[color=#B9B4F8][b]info:[/b] %s[/color]" % msg);
-
-
-func debug(msg: String) -> void:
-	self.log("[color=#9FD1D6][b]dbg:[/b] %s[/color]" % msg);
-
-
-func warn(msg: String) -> void:
-	self.log("[color=#F89D2C][b]warn:[/b] %s[/color]" % msg);
-
-
-func error(msg: String) -> void:
-	self.log("[color=#E81608][b]err:[/b] %s[/color]" % msg);

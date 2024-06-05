@@ -39,3 +39,4 @@ offset_top = 115.0
 offset_right = 839.0
 offset_bottom = 606.0
 script = ExtResource("1_f3lxn")
+blur = 0.5

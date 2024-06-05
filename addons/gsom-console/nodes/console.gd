@@ -1,7 +1,58 @@
 extends Control
 
-const MIN_WIDTH: float = 480;
-const MIN_HEIGHT: float = 320;
+const _MIN_WIDTH: float = 480;
+const _MIN_HEIGHT: float = 320;
+
+var _is_drag: bool = false;
+var _is_resize: bool = false;
+var _grab_pos_mouse := Vector2();
+var _grab_pos_wrapper := Vector2();
+var _grab_size := Vector2();
+var _is_hint: bool = false;
+var _list_hint: PackedStringArray = [];
+var _is_history: bool = false;
+var _index: int = 0;
+
+
+var _wrapper_pos := Vector2.ZERO:
+	get:
+		return get_parent().position;
+	set(v):
+		get_parent().position = v;
+
+
+var _wrapper_size := Vector2(_MIN_WIDTH, _MIN_HEIGHT):
+	get:
+		return get_parent().size;
+	set(v):
+		get_parent().size = v;
+
+var _wrapper_wigth: float = _MIN_WIDTH:
+	get:
+		return _wrapper_size.x;
+	set(v):
+		_wrapper_size.x = v;
+
+var _wrapper_height: float = _MIN_HEIGHT:
+	get:
+		return _wrapper_size.y;
+	set(v):
+		_wrapper_size.y = v;
+
+
+var _view_size := Vector2(_MIN_WIDTH, _MIN_HEIGHT):
+	get:
+		return get_viewport().size;
+
+
+var _viewWigth: float = _MIN_WIDTH:
+	get:
+		return _view_size.x;
+
+var _viewHeight: float = _MIN_HEIGHT:
+	get:
+		return _view_size.y;
+
 
 @onready var _draggable: Control = $Draggable;
 @onready var _blur: Control = $Panel/Blur;
@@ -17,57 +68,6 @@ const MIN_HEIGHT: float = 320;
 @onready var _resize_right: Control = $Resizers/ResizeRight;
 
 
-var _is_drag: bool = false;
-var _is_resize: bool = false;
-var _grab_pos_mouse := Vector2();
-var _grab_pos_wrapper := Vector2();
-var _grab_size := Vector2();
-var _is_hint: bool = false;
-var _list_hint: Array[String] = [];
-var _is_history: bool = false;
-var _index: int = 0;
-
-
-var _wrapper_pos: Vector2 = Vector2.ZERO:
-	get:
-		return get_parent().position;
-	set(v):
-		get_parent().position = v;
-
-
-var _wrapper_size: Vector2 = Vector2(MIN_WIDTH, MIN_HEIGHT):
-	get:
-		return get_parent().size;
-	set(v):
-		get_parent().size = v;
-
-var _wrapper_wigth: float = MIN_WIDTH:
-	get:
-		return _wrapper_size.x;
-	set(v):
-		_wrapper_size.x = v;
-
-var _wrapper_height: float = MIN_HEIGHT:
-	get:
-		return _wrapper_size.y;
-	set(v):
-		_wrapper_size.y = v;
-
-
-var _view_size: Vector2 = Vector2(MIN_WIDTH, MIN_HEIGHT):
-	get:
-		return get_viewport().size;
-
-
-var _viewWigth: float = MIN_WIDTH:
-	get:
-		return _view_size.x;
-
-var _viewHeight: float = MIN_HEIGHT:
-	get:
-		return _view_size.y;
-
-
 func _ready() -> void:
 	_draggable.gui_input.connect(_handle_input_drag);
 	_edit_cmd.gui_input.connect(_handle_edit_keys);
@@ -76,10 +76,10 @@ func _ready() -> void:
 	_resize_left.gui_input.connect(_handle_input_resize_left);
 	_resize_right.gui_input.connect(_handle_input_resize_right);
 	
-	GsomConsole.onToggle.connect(_handle_visibility);
-	_handle_visibility(GsomConsole.isVisible);
+	GsomConsole.toggled.connect(_handle_visibility);
+	_handle_visibility(GsomConsole.is_visible);
 	
-	GsomConsole.onLog.connect(_handle_log_change);
+	GsomConsole.logged.connect(_handle_log_change);
 	_handle_log_change();
 	
 	_button_close.pressed.connect(GsomConsole.hide);
@@ -95,9 +95,9 @@ func _ready() -> void:
 
 #region Console Input Handlers
 
-func _handle_visibility(isVisible: bool) -> void:
-	visible = isVisible;
-	if isVisible:
+func _handle_visibility(is_visible: bool) -> void:
+	visible = is_visible;
+	if is_visible:
 		_edit_cmd.grab_focus();
 	else:
 		_edit_cmd.text = "";
@@ -105,11 +105,11 @@ func _handle_visibility(isVisible: bool) -> void:
 
 
 func _handle_log_change(_text: String = "") -> void:
-	_label_log.text = GsomConsole.logText;
+	_label_log.text = GsomConsole.log_text;
 
 
 func _handle_hint_button(sender: Button) -> void:
-	_applyHint(sender.text);
+	_apply_hint(sender.text);
 
 
 func _handle_text_change(text: String) -> void:
@@ -124,7 +124,7 @@ func _handle_text_change(text: String) -> void:
 		_render_hints();
 		return;
 	
-	var match_list: Array[String] = GsomConsole.getMatches(text);
+	var match_list: PackedStringArray = GsomConsole.get_matches(text);
 	if !match_list.size():
 		return;
 	
@@ -211,7 +211,7 @@ func _apply_from_list() -> void:
 	if !list_len:
 		return;
 	var index_final: int = _get_positive_index();
-	_applyHint(_list_hint[index_final]);
+	_apply_hint(_list_hint[index_final]);
 
 
 func _reset_hint_state() -> void:
@@ -223,7 +223,7 @@ func _reset_hint_state() -> void:
 	_render_hints();
 
 
-func _applyHint(text: String) -> void:
+func _apply_hint(text: String) -> void:
 	_edit_cmd.text = text;
 	_edit_cmd.caret_column = text.length();
 	_reset_hint_state();
@@ -234,7 +234,7 @@ func _render_hints() -> void:
 		return;
 		
 	var sub_range: Array[int] = _getSublist();
-	var sublist: Array[String] = _list_hint.slice(sub_range[0], sub_range[1]) as Array[String];
+	var sublist: PackedStringArray = _list_hint.slice(sub_range[0], sub_range[1]) as PackedStringArray;
 	var sublen: int = sublist.size();
 	var children: Array[Node] = _column_hint.get_children();
 	var child_count: int = children.size();
@@ -365,7 +365,7 @@ func _handle_mouse_move_resize_top(event: InputEventMouseMotion) -> void:
 	var dy: float = event.global_position.y - _grab_pos_mouse.y;
 	var newY: float = clamp(_grab_pos_wrapper.y + dy, 0.0, _viewHeight);
 	var newH: float = _grab_size.y + (_grab_pos_mouse.y - newY);
-	if newH < MIN_HEIGHT:
+	if newH < _MIN_HEIGHT:
 		return;
 	
 	_wrapper_pos.y = newY;
@@ -375,7 +375,7 @@ func _handle_mouse_move_resize_top(event: InputEventMouseMotion) -> void:
 func _handle_mouse_move_resize_bottom(event: InputEventMouseMotion) -> void:
 	var dy: float = event.global_position.y - _grab_pos_mouse.y;
 	var newH: float = _grab_size.y + dy;
-	if newH < MIN_HEIGHT || (newH + _grab_pos_wrapper.y > _viewHeight):
+	if newH < _MIN_HEIGHT || (newH + _grab_pos_wrapper.y > _viewHeight):
 		return;
 	
 	_wrapper_height = newH;
@@ -385,7 +385,7 @@ func _handle_mouse_move_resize_left(event: InputEventMouseMotion) -> void:
 	var dx: float = event.global_position.x - _grab_pos_mouse.x;
 	var newX: float = clamp(_grab_pos_wrapper.x + dx, 0.0, _viewWigth);
 	var newW: float = _grab_size.x + (_grab_pos_mouse.x - newX);
-	if newW < MIN_WIDTH:
+	if newW < _MIN_WIDTH:
 		return;
 	
 	_wrapper_pos.x = newX;
@@ -395,7 +395,7 @@ func _handle_mouse_move_resize_left(event: InputEventMouseMotion) -> void:
 func _handle_mouse_move_resize_right(event: InputEventMouseMotion) -> void:
 	var dx: float = event.global_position.x - _grab_pos_mouse.x;
 	var newW: float = _grab_size.x + dx;
-	if newW < MIN_WIDTH || (newW + _grab_pos_wrapper.x > _viewWigth):
+	if newW < _MIN_WIDTH || (newW + _grab_pos_wrapper.x > _viewWigth):
 		return;
 	
 	_wrapper_wigth = newW;
