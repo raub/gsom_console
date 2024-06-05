@@ -27,7 +27,7 @@ const _TYPE_NAMES: Dictionary = {
 	TYPE_STRING: "String",
 }
 
-const _COLORS_HELP = ["#f6d3ff", "#fff6d3", "#d3f6ff", "#f6ffd3"];
+const _COLORS_HELP = ["#f6d3ff", "#fff6d3", "#d3f6ff", "#f6ffd3"]
 
 
 var _log_text: String = ""
@@ -294,7 +294,7 @@ func _adjust_type(oldValue: Variant, newValue: String) -> Variant:
 func _get_help_color() -> String:
 	var color: String = _COLORS_HELP[_help_color_idx % _COLORS_HELP.size()]
 	_help_color_idx = _help_color_idx + 1
-	return color;
+	return color
 
 
 func _help(args: PackedStringArray) -> void:

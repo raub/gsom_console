@@ -13,6 +13,15 @@ func _ready() -> void:
 	GsomConsole.register_cvar("test4", "hello", "Test CVAR 4.")
 	GsomConsole.register_cvar("test5", -10, "Test CVAR 5.")
 	
+	GsomConsole.register_cmd("do_something", "Test CMD.")
+	
+	GsomConsole.called_cmd.connect(
+		func (cmd_name: String, args: PackedStringArray) -> void:
+			if cmd_name == "do_something":
+				prints("do_something:", args)
+				GsomConsole.info("do_something: %s" % str(args))
+	)
+	
 	GsomConsole.log("Hello World.")
 
 
