@@ -3,9 +3,9 @@ extends EditorPlugin
 
 
 func _enter_tree() -> void:
-	add_autoload_singleton("GsomConsole", "./gsom-console-autoload.gd")
+	add_autoload_singleton("GsomConsole", "./gsom_console_autoload.gd")
 	add_custom_type(
-		"GsomConsolePanel", "Control", preload("./tools/console-wrap.gd"), preload("./tools/console.svg")
+		"GsomConsolePanel", "Control", preload("./tools/console_wrap.gd"), preload("./tools/console.svg")
 	)
 
 

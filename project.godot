@@ -10,8 +10,9 @@ config_version=5
 
 [application]
 
-config/name="gd-plugin-gsom-console"
-config/description="Adds the GsomConsole autoload singleton and provides a simple Half-Life style console widget node (GsomConsolePanel). The autoload singleton can be used separately to work with CVARs and CMDs and provide data to your own console widget if you wish."
+config/name="gsom_console"
+config/description="A Half-Life 1 inspired console for Godot projects. There is a singleton and optional UI.
+The core idea: you have CVARs (console variables) and CMDs (commands). You can use CVARs as global variables and settings. CMDs are like global events/signals."
 config/version="0.0.1"
 run/main_scene="res://preview.tscn"
 config/features=PackedStringArray("4.2", "Forward Plus")
@@ -19,7 +20,7 @@ config/icon="res://icon.png"
 
 [autoload]
 
-GsomConsole="*res://addons/gsom_console/./gsom-console-autoload.gd"
+GsomConsole="*res://addons/gsom_console/./gsom_console_autoload.gd"
 
 [display]
 
@@ -29,4 +30,4 @@ window/size/always_on_top=true
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gsom-console/plugin.cfg", "res://addons/gsom_console/plugin.cfg")
+enabled=PackedStringArray("res://addons/gsom_console/plugin.cfg")
