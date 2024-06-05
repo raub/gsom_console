@@ -19,7 +19,7 @@ config/icon="res://icon.png"
 
 [autoload]
 
-GsomConsole="*res://addons/gsom-console/./gsom-console-autoload.gd"
+GsomConsole="*res://addons/gsom_console/./gsom-console-autoload.gd"
 
 [display]
 
@@ -29,4 +29,4 @@ window/size/always_on_top=true
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gsom-console/plugin.cfg")
+enabled=PackedStringArray("res://addons/gsom-console/plugin.cfg", "res://addons/gsom_console/plugin.cfg")
