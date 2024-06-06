@@ -29,8 +29,8 @@ doesn't do anything specific per CMD call - only emits the `called_cmd` signal.
 
 See [example](preview.gd) script.
 
-[![screenshot_1](/thumbnail_1.jpg)](/screenshot_1.jpg)
-[![screenshot_2](/thumbnail_2.jpg)](/screenshot_2.jpg)
+[![screenshot_1](/gdignore/thumbnail_1.jpg)](/gdignore/screenshot_1.jpg)
+[![screenshot_2](/gdignore/thumbnail_2.jpg)](/gdignore/screenshot_2.jpg)
 
 
 ## GsomConsole
