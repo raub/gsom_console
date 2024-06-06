@@ -24,9 +24,9 @@ var _blur: float = 0.5
 		_assign_blur()
 
 
-var _color := Color(0.0, 0.0, 0.0, 0.3)
+var _color := Color(0.1, 0.1, 0.1, 0.4)
 ## Panel background color. When alpha is 0 - only blur applied, if 1 no blur visible.
-@export var color: Color = Color(0.0, 0.0, 0.0, 0.3):
+@export var color: Color = Color(0.1, 0.1, 0.1, 0.4):
 	get:
 		return _color
 	set(v):

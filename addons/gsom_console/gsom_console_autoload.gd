@@ -27,7 +27,15 @@ const _TYPE_NAMES: Dictionary = {
 	TYPE_STRING: "String",
 }
 
-const _COLORS_HELP = ["#f6d3ff", "#fff6d3", "#d3f6ff", "#f6ffd3"]
+const _COLORS_HELP = ["#d4fdeb", "#d4e6fd", "#fdd4e6", "#fdebd4"]
+const _COLOR_PRIMARY = "#ecf4fe"
+const _COLOR_SECONDARY = "#a3b0c7"
+const _COLOR_TYPE = "#95c1fb"
+const _COLOR_VALUE = "#f6d386"
+const _COLOR_INFO = "#a29cf5"
+const _COLOR_DEBUG = "#c3e2e5"
+const _COLOR_WARN = "#f89d2c"
+const _COLOR_ERROR = "#e81608"
 
 
 var _log_text: String = ""
@@ -73,7 +81,11 @@ func _ready() -> void:
 				get_tree().quit()
 	)
 	
-	self.log("Type `[b][color=orange]help[/color][/b]` to view existing commands and variables.")
+	self.log(
+		"Type `%s` to view existing commands and variables." % [
+			_color(_COLOR_VALUE, "[b]help[/b]"),
+		]
+	)
 
 
 ## Makes a new CVAR available with default value and optional help note.
@@ -130,8 +142,10 @@ func set_cvar(cvar_name: String, value: Variant) -> void:
 	_cvars[cvar_name].value = adjusted
 	var type_value: int = typeof(adjusted)
 	var type_name: String = _TYPE_NAMES[type_value]
-	var hint: String = "[color=gray]:[/color] [color=orange]%s[/color] [color=green]%s[/color]" % [
-		type_name, adjusted
+	var hint: String = "%s %s %s" % [
+		_color(_COLOR_SECONDARY, ":"),
+		_color(_COLOR_TYPE, type_name),
+		_color(_COLOR_VALUE, str(adjusted)),
 	]
 	_cvars[cvar_name].hint = hint
 	
@@ -235,10 +249,10 @@ func submit(expression: String) -> void:
 		var type_value: int = typeof(result)
 		var type_name: String = _TYPE_NAMES[type_value]
 		self.log("%s%s%s %s" % [
-				_color("white", g0),
-				_color("gray", ":"),
-				_color("orange", type_name),
-				_color("green", str(result)),
+				_color(_COLOR_PRIMARY, g0),
+				_color(_COLOR_SECONDARY, ":"),
+				_color(_COLOR_TYPE, type_name),
+				_color(_COLOR_VALUE, str(result)),
 		])
 		_history_push(expression)
 		return
@@ -254,22 +268,22 @@ func log(msg: String) -> void:
 
 ## Wraps `msg` with color BBCode and calls `log`.
 func info(msg: String) -> void:
-	self.log(_color("#F89D2C", "[b]info:[/b] %s" % msg))
+	self.log(_color(_COLOR_INFO, "[b]info:[/b] %s" % msg))
 
 
 ## Wraps `msg` with color BBCode and calls `log`.
 func debug(msg: String) -> void:
-	self.log(_color("#F89D2C", "[b]dbg:[/b] %s" % msg))
+	self.log(_color(_COLOR_DEBUG, "[b]dbg:[/b] %s" % msg))
 
 
 ## Wraps `msg` with color BBCode and calls `log`.
 func warn(msg: String) -> void:
-	self.log(_color("#F89D2C", "[b]warn:[/b] %s" % msg))
+	self.log(_color(_COLOR_WARN, "[b]warn:[/b] %s" % msg))
 
 
 ## Wraps `msg` with color BBCode and calls `log`.
 func error(msg: String) -> void:
-	self.log(_color("#E81608", "[b]err:[/b] %s" % msg))
+	self.log(_color(_COLOR_ERROR, "[b]err:[/b] %s" % msg))
 
 
 func _color(color: String, text: String) -> String:
@@ -312,7 +326,7 @@ func _help(args: PackedStringArray) -> void:
 				result.push_back(_color(color, "[b]%s[/b] - %s" % [arg, _cvars[arg].help]))
 				result.push_back("\n")
 			else:
-				result.push_back(_color("#E81608", "[b]%s[/b] - No such command/variable." % arg))
+				result.push_back(_color(_COLOR_ERROR, "[b]%s[/b] - No such command/variable." % arg))
 				result.push_back("\n")
 		
 		self.log("".join(PackedStringArray(result)))

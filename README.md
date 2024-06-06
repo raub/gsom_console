@@ -98,7 +98,7 @@ The default UI console panel, available as a descendant of `Control` node.
 * `float blur` [default: 0.6] [property: setter, getter] -
     Background blur intensity. Blur is only visible while `color.a` is below 1.
 
-* `Color color` [default: Color(0, 0, 0, 0.3)] [property: setter, getter] -
+* `Color color` [default: Color(0.1, 0.1, 0.1, 0.4)] [property: setter, getter] -
     Panel background color. When alpha is 0 - only blur applied, if 1 no blur visible.
 
 * `String label_window` [default: "Console"] [property: setter, getter] -
