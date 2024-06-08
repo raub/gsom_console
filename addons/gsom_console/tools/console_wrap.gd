@@ -14,7 +14,7 @@ const _SceneConsole: PackedScene = preload("../nodes/console.tscn")
 var _console_window: Control = null
 
 
-var _blur: float = 0.5
+var _blur: float = 0.6
 ## Background blur intensity. Blur is only visible while `color.a` is below 1.
 @export_range(0.0, 1.0) var blur: float = 0.6:
 	get:
@@ -79,6 +79,9 @@ func _ready() -> void:
 	_console_window = _SceneConsole.instantiate()
 	add_child(_console_window)
 	
+	GsomConsole.toggled.connect(_handle_visibility)
+	_handle_visibility(GsomConsole.is_visible)
+	
 	# Use duplicated material and shader to avoid changing the default from an instance
 	var blur_panel: Control = _console_window.get_node("Panel/Blur")
 	blur_panel.material = blur_panel.material.duplicate(true)
@@ -90,6 +93,9 @@ func _ready() -> void:
 	_assign_is_resize_enabled()
 	_assign_is_draggable()
 
+
+func _handle_visibility(is_visible: bool) -> void:
+	visible = is_visible
 
 #region Property Helpers
 

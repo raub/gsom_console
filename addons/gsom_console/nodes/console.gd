@@ -96,7 +96,6 @@ func _ready() -> void:
 #region Console Input Handlers
 
 func _handle_visibility(is_visible: bool) -> void:
-	visible = is_visible
 	if is_visible:
 		_edit_cmd.grab_focus()
 	else:
