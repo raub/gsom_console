@@ -73,12 +73,15 @@ var _help_color_idx: int = 0
 func _ready() -> void:
 	register_cmd("help", "Display available commands and variables.")
 	register_cmd("quit", "Close the application, exit to desktop.")
+	register_cmd("disconnect", "Quit the current map and return to the main menu.")
 	called_cmd.connect(
 		func (cmd_name: String, args: PackedStringArray) -> void:
 			if cmd_name == "help":
 				_help(args)
 			elif cmd_name == "quit":
 				get_tree().quit()
+			elif cmd_name == "disconnect":
+				get_tree().change_scene_to_file("application/run/main_scene")
 	)
 	
 	self.log(
