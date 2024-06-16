@@ -73,19 +73,10 @@ var _help_color_idx: int = 0
 func _ready() -> void:
 	register_cmd("help", "Display available commands and variables.")
 	register_cmd("quit", "Close the application, exit to desktop.")
-	register_cmd("mainmenu", "Quit the current map and return to the main menu.")
-	register_cmd("map", "Load a specific map")
-	called_cmd.connect(
-		func (cmd_name: String, args: PackedStringArray) -> void:
-			if cmd_name == "help":
-				_help(args)
-			elif cmd_name == "quit":
-				get_tree().quit()
-			elif cmd_name == "mainmenu":
-				get_tree().change_scene_to_file(
-					ProjectSettings.get_setting("application/run/main_scene")
-				)
-				GsomConsole.toggle()
+	register_cmd("mainscene", "Reload the main scene (as in project settings).")
+	register_cmd("map", "Switch to a scene by path, or show path to the current one.")
+	
+	called_cmd.connect(_handle_builtins)
 	
 	self.log(
 		"Type `%s` to view existing commands and variables." % [
@@ -292,6 +283,17 @@ func error(msg: String) -> void:
 	self.log(_color(_COLOR_ERROR, "[b]err:[/b] %s" % msg))
 
 
+func _handle_builtins(cmd_name: String, args: PackedStringArray) -> void:
+	if cmd_name == "help":
+		_cmd_help(args)
+	elif cmd_name == "quit":
+		get_tree().quit()
+	elif cmd_name == "map":
+		_cmd_map(args)
+	elif cmd_name == "mainscene":
+		_cmd_map([ProjectSettings.get_setting("application/run/main_scene")])
+
+
 func _color(color: String, text: String) -> String:
 	return "[color=%s]%s[/color]" % [color, text]
 
@@ -317,7 +319,25 @@ func _get_help_color() -> String:
 	return color
 
 
-func _help(args: PackedStringArray) -> void:
+func _cmd_map(args: PackedStringArray) -> void:
+	if !args.size():
+		self.log("The current scene is '%s'." % get_tree().current_scene.scene_file_path)
+		return
+	
+	# `map [name]` syntax below
+	var mapName: String = args[0]
+	if !ResourceLoader.exists(mapName):
+		mapName += ".tscn"
+	if !ResourceLoader.exists(mapName):
+		error("Scene '%s' doesn't exist." % args[0])
+		return
+	
+	info("Changing scene to '%s'..." % args[0])
+	get_tree().change_scene_to_file(mapName)
+	GsomConsole.hide()
+
+
+func _cmd_help(args: PackedStringArray) -> void:
 	var i: int = 0
 	var result: PackedStringArray = []
 	
