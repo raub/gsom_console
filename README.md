@@ -89,6 +89,10 @@ It holds all the common console logic and is not tied to any specific UI.
 * `help [name1, name2, ...]` - collect and display the currently available CVARs and CMDs.
     If any optional parameters `nameN` are provided, the console will
     only display the matching info.
+* `map [name]` - if called without arguments, shows the current scene name. With an argument,
+    it will try to change scene to the given one (by path). E.g. `map a/b/c` -> change
+    scene to `res://a/b/c.tscn`. The `.tscn` suffix is optional for this command.
+* `mainscene` - immediately switch to the project's main scene, as per project settings.
 * `quit` - immediately closes the application.
 
 
@@ -115,3 +119,15 @@ The default UI console panel, available as a descendant of `Control` node.
 
 * `bool is_draggable` [default: true] [property: setter, getter] -
     Makes window panel draggable.
+
+
+## Future Work / Contributions
+
+The development focus of this plugin is following:
+
+* Implement scripting logic: `alias`, `wait`, `;`, `exec`.
+* Consider allowing the `+/-` commands if that is going to work at all.
+* Add components: top console plaque (Q1, Serious Sam), log overlay, bottom-left console (TES Oblivion/Skyrim).
+* Expand component options: colors, verbosity/log levels - maybe also add cvars that control those on runtime.
+* Improve autocompletion/matching and hints.
+* Think about some generic commands/cvars that are relevant for ALL projects.
