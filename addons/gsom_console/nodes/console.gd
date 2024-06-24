@@ -256,7 +256,7 @@ func _get_positive_index() -> int:
 
 
 # Calculate start and end indices of sublist to render
-# Returns pair as array: [startIndex, endIndex]
+# Returns pair as array: [start_index, end_index]
 func _getSublist() -> Array[int]:
 	var list_len: int = _list_hint.size()
 	if list_len < 5:
@@ -267,10 +267,10 @@ func _getSublist() -> Array[int]:
 		return [0, 4]
 	
 	var index_last: int = list_len - 1
-	var endAt: int = min(index_final + 2, list_len)
-	var startAt: int = endAt - 4
+	var end_at: int = min(index_final + 2, list_len)
+	var start_at: int = end_at - 4
 	
-	return [startAt, endAt]
+	return [start_at, end_at]
 
 #endregion
 
@@ -362,41 +362,41 @@ func _handle_input_resize_right(event: InputEvent) -> void:
 
 func _handle_mouse_move_resize_top(event: InputEventMouseMotion) -> void:
 	var dy: float = event.global_position.y - _grab_pos_mouse.y
-	var newY: float = clamp(_grab_pos_wrapper.y + dy, 0.0, _viewHeight)
-	var newH: float = _grab_size.y + (_grab_pos_mouse.y - newY)
-	if newH < _MIN_HEIGHT:
+	var new_y: float = clamp(_grab_pos_wrapper.y + dy, 0.0, _viewHeight)
+	var new_h: float = _grab_size.y + (_grab_pos_mouse.y - new_y)
+	if new_h < _MIN_HEIGHT:
 		return
 	
-	_wrapper_pos.y = newY
-	_wrapper_height = newH
+	_wrapper_pos.y = new_y
+	_wrapper_height = new_h
 
 
 func _handle_mouse_move_resize_bottom(event: InputEventMouseMotion) -> void:
 	var dy: float = event.global_position.y - _grab_pos_mouse.y
-	var newH: float = _grab_size.y + dy
-	if newH < _MIN_HEIGHT or (newH + _grab_pos_wrapper.y > _viewHeight):
+	var new_h: float = _grab_size.y + dy
+	if new_h < _MIN_HEIGHT or (new_h + _grab_pos_wrapper.y > _viewHeight):
 		return
 	
-	_wrapper_height = newH
+	_wrapper_height = new_h
 
 
 func _handle_mouse_move_resize_left(event: InputEventMouseMotion) -> void:
 	var dx: float = event.global_position.x - _grab_pos_mouse.x
-	var newX: float = clamp(_grab_pos_wrapper.x + dx, 0.0, _viewWigth)
-	var newW: float = _grab_size.x + (_grab_pos_mouse.x - newX)
-	if newW < _MIN_WIDTH:
+	var new_x: float = clamp(_grab_pos_wrapper.x + dx, 0.0, _viewWigth)
+	var new_w: float = _grab_size.x + (_grab_pos_mouse.x - new_x)
+	if new_w < _MIN_WIDTH:
 		return
 	
-	_wrapper_pos.x = newX
-	_wrapper_wigth = newW
+	_wrapper_pos.x = new_x
+	_wrapper_wigth = new_w
 
 
 func _handle_mouse_move_resize_right(event: InputEventMouseMotion) -> void:
 	var dx: float = event.global_position.x - _grab_pos_mouse.x
-	var newW: float = _grab_size.x + dx
-	if newW < _MIN_WIDTH or (newW + _grab_pos_wrapper.x > _viewWigth):
+	var new_w: float = _grab_size.x + dx
+	if new_w < _MIN_WIDTH or (new_w + _grab_pos_wrapper.x > _viewWigth):
 		return
 	
-	_wrapper_wigth = newW
+	_wrapper_wigth = new_w
 
 #endregion

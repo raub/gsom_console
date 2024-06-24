@@ -298,19 +298,19 @@ func _color(color: String, text: String) -> String:
 	return "[color=%s]%s[/color]" % [color, text]
 
 
-func _adjust_type(oldValue: Variant, newValue: String) -> Variant:
-	var value_type = typeof(oldValue)
+func _adjust_type(old_value: Variant, new_value: String) -> Variant:
+	var value_type = typeof(old_value)
 	if value_type == TYPE_BOOL:
-		return newValue == "true" or newValue == "1"
+		return new_value == "true" or new_value == "1"
 	elif value_type == TYPE_INT:
-		return int(newValue)
+		return int(new_value)
 	elif value_type == TYPE_FLOAT:
-		return float(newValue)
+		return float(new_value)
 	elif value_type == TYPE_STRING:
-		return newValue
+		return new_value
 	
 	push_warning("GsomConsole.set_cvar: only bool, int, float, string supported.")
-	return oldValue
+	return old_value
 
 
 func _get_help_color() -> String:
@@ -325,15 +325,15 @@ func _cmd_map(args: PackedStringArray) -> void:
 		return
 	
 	# `map [name]` syntax below
-	var mapName: String = args[0]
-	if !ResourceLoader.exists(mapName):
-		mapName += ".tscn"
-	if !ResourceLoader.exists(mapName):
+	var map_name: String = args[0]
+	if !ResourceLoader.exists(map_name):
+		map_name += ".tscn"
+	if !ResourceLoader.exists(map_name):
 		error("Scene '%s' doesn't exist." % args[0])
 		return
 	
 	info("Changing scene to '%s'..." % args[0])
-	get_tree().change_scene_to_file(mapName)
+	get_tree().change_scene_to_file(map_name)
 	GsomConsole.hide()
 
 
@@ -376,8 +376,8 @@ func _cmd_help(args: PackedStringArray) -> void:
 
 
 func _history_push(expression: String) -> void:
-	var historyLen: int = _history.size()
-	if historyLen and _history[historyLen - 1] == expression:
+	var history_len: int = _history.size()
+	if history_len and _history[history_len - 1] == expression:
 		return
 	
 	_history.append(expression)
