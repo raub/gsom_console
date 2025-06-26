@@ -1,16 +1,16 @@
-[gd_scene load_steps=11 format=3 uid="uid://d3jm7r6ulco1u"]
+[gd_scene load_steps=11 format=3 uid="uid://csdnrwpgwsve4"]
 
-[ext_resource type="Theme" uid="uid://dicw3tpmpx0f2" path="res://addons/gsom_console/resources/console.theme" id="1_855tn"]
-[ext_resource type="Script" uid="uid://6wb0nupivyv2" path="res://addons/gsom_console/nodes/console.gd" id="2_8s0l7"]
-[ext_resource type="Shader" uid="uid://cfvmjcxure18m" path="res://addons/gsom_console/resources/blur.gdshader" id="3_vb7yd"]
-[ext_resource type="PackedScene" uid="uid://ve34jvxp5je" path="res://addons/gsom_console/tools/button_hint.tscn" id="4_qgvsu"]
+[ext_resource type="Theme" uid="uid://dicw3tpmpx0f2" path="res://addons/gsom_console/resources/console.theme" id="1_1qiun"]
+[ext_resource type="Script" uid="uid://mo2mfj67jgmk" path="res://addons/gsom_console/nodes/plaque.gd" id="2_n88k5"]
+[ext_resource type="Shader" uid="uid://cfvmjcxure18m" path="res://addons/gsom_console/resources/blur.gdshader" id="3_l76s4"]
+[ext_resource type="PackedScene" uid="uid://ve34jvxp5je" path="res://addons/gsom_console/tools/button_hint.tscn" id="4_qpegm"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_quour"]
-shader = ExtResource("3_vb7yd")
+shader = ExtResource("3_l76s4")
 shader_parameter/blur = 3.0
 shader_parameter/color = Color(0, 0, 0, 0.3)
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_p7l3d"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ha3lx"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_fnh51"]
 
@@ -22,29 +22,17 @@ content_margin_bottom = 2.0
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_x7n6s"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_0j3wf"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vn0da"]
 
-[node name="Console" type="Control"]
+[node name="Plaque" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 3.0
-offset_top = 3.0
-offset_right = -3.0
-offset_bottom = -3.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("1_855tn")
-script = ExtResource("2_8s0l7")
-
-[node name="Draggable" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+theme = ExtResource("1_1qiun")
+script = ExtResource("2_n88k5")
 
 [node name="Panel" type="Control" parent="."]
 layout_mode = 1
@@ -58,7 +46,7 @@ mouse_filter = 2
 [node name="Blur" type="ColorRect" parent="Panel"]
 material = SubResource("ShaderMaterial_quour")
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
@@ -79,32 +67,10 @@ grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 5
 
-[node name="RowTitle" type="HBoxContainer" parent="Panel/ColumnMain"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="LabelTitle" type="Label" parent="Panel/ColumnMain/RowTitle"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Console"
-
-[node name="ButtonClose" type="Button" parent="Panel/ColumnMain/RowTitle"]
-custom_minimum_size = Vector2(32, 32)
-layout_mode = 2
-focus_mode = 0
-
-[node name="Line2D" type="Line2D" parent="Panel/ColumnMain/RowTitle/ButtonClose"]
-position = Vector2(8, 8)
-points = PackedVector2Array(0, 0, 16, 16, 8, 8, 16, 0, 0, 16)
-width = 2.0
-joint_mode = 2
-begin_cap_mode = 2
-end_cap_mode = 2
-
 [node name="BgLog" type="ColorRect" parent="Panel/ColumnMain"]
 layout_mode = 2
 size_flags_vertical = 3
-color = Color(0.0901961, 0.0901961, 0.0901961, 0.364706)
+color = Color(0.19, 0.19, 0.19, 0.203922)
 
 [node name="LabelLog" type="RichTextLabel" parent="Panel/ColumnMain/BgLog"]
 layout_mode = 1
@@ -116,7 +82,7 @@ grow_vertical = 2
 focus_mode = 2
 theme_override_constants/outline_size = 0
 theme_override_constants/line_separation = 6
-theme_override_styles/focus = SubResource("StyleBoxEmpty_p7l3d")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_ha3lx")
 bbcode_enabled = true
 scroll_following = true
 selection_enabled = true
@@ -135,7 +101,7 @@ theme_override_styles/panel = SubResource("StyleBoxEmpty_fnh51")
 [node name="BgHint" type="ColorRect" parent="Panel/ColumnMain/BgLog/ContainerHint"]
 layout_mode = 2
 size_flags_vertical = 3
-color = Color(0.0901961, 0.0901961, 0.0901961, 0.823529)
+color = Color(0.09, 0.09, 0.09, 0.615686)
 
 [node name="ContainerHintInner" type="PanelContainer" parent="Panel/ColumnMain/BgLog/ContainerHint"]
 layout_mode = 2
@@ -145,16 +111,16 @@ theme_override_styles/panel = SubResource("StyleBoxEmpty_8lbl8")
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="Hint1" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_qgvsu")]
+[node name="Hint1" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_qpegm")]
 layout_mode = 2
 
-[node name="Hint2" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_qgvsu")]
+[node name="Hint2" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_qpegm")]
 layout_mode = 2
 
-[node name="Hint3" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_qgvsu")]
+[node name="Hint3" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_qpegm")]
 layout_mode = 2
 
-[node name="Hint4" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_qgvsu")]
+[node name="Hint4" parent="Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint" instance=ExtResource("4_qpegm")]
 layout_mode = 2
 
 [node name="RowInput" type="HBoxContainer" parent="Panel/ColumnMain"]
@@ -170,21 +136,33 @@ theme_override_styles/panel = SubResource("StyleBoxEmpty_x7n6s")
 [node name="BgCmd" type="ColorRect" parent="Panel/ColumnMain/RowInput/ContainerCmd"]
 layout_mode = 2
 size_flags_vertical = 3
-color = Color(0.0901961, 0.0901961, 0.0901961, 0.364706)
+color = Color(0.09, 0.09, 0.09, 0.286275)
 
 [node name="EditCmd" type="LineEdit" parent="Panel/ColumnMain/RowInput/ContainerCmd"]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/focus = SubResource("StyleBoxEmpty_0j3wf")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_vn0da")
 placeholder_text = "enter command here..."
 flat = true
 
 [node name="ButtonSubmit" type="Button" parent="Panel/ColumnMain/RowInput"]
-custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 focus_mode = 0
 text = "submit"
+
+[node name="ButtonClose" type="Button" parent="Panel/ColumnMain/RowInput"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+focus_mode = 0
+
+[node name="Line2D" type="Line2D" parent="Panel/ColumnMain/RowInput/ButtonClose"]
+position = Vector2(11, 11)
+points = PackedVector2Array(0, 0, 16, 16, 8, 8, 16, 0, 0, 16)
+width = 2.0
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
 
 [node name="Resizers" type="Control" parent="."]
 layout_mode = 1
@@ -199,25 +177,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="ResizeTop" type="Control" parent="Resizers"]
-custom_minimum_size = Vector2(0, 6)
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-grow_horizontal = 2
-mouse_default_cursor_shape = 9
-
-[node name="ResizeRight" type="Control" parent="Resizers"]
-custom_minimum_size = Vector2(6, 0)
-layout_mode = 1
-anchors_preset = 11
-anchor_left = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 0
-grow_vertical = 2
-mouse_default_cursor_shape = 10
-
 [node name="ResizeBottom" type="Control" parent="Resizers"]
 custom_minimum_size = Vector2(0, 6)
 layout_mode = 1
@@ -228,11 +187,3 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_default_cursor_shape = 9
-
-[node name="ResizeLeft" type="Control" parent="Resizers"]
-custom_minimum_size = Vector2(6, 0)
-layout_mode = 1
-anchors_preset = 9
-anchor_bottom = 1.0
-grow_vertical = 2
-mouse_default_cursor_shape = 10

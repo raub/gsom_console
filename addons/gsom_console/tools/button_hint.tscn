@@ -9,9 +9,9 @@ bg_color = Color(0.423529, 0.423529, 0.423529, 0.364706)
 
 [node name="Hint" type="Button"]
 focus_mode = 0
-theme_override_colors/font_color = Color(0.709804, 0.709804, 0.709804, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_styles/normal = SubResource("StyleBoxFlat_42osk")
+theme_override_colors/font_color = Color(0.709804, 0.709804, 0.709804, 1)
 theme_override_styles/hover = SubResource("StyleBoxFlat_42osk")
+theme_override_styles/normal = SubResource("StyleBoxFlat_42osk")
 text = "hint"
 alignment = 0

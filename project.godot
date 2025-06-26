@@ -15,7 +15,7 @@ config/description="A Half-Life 1 inspired console for Godot projects. There is 
 The core idea: you have CVARs (console variables) and CMDs (commands). You can use CVARs as global variables and settings. CMDs are like global events/signals."
 config/version="0.1.0"
 run/main_scene="res://preview.tscn"
-config/features=PackedStringArray("4.2", "Forward Plus")
+config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.png"
 
 [autoload]

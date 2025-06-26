@@ -1,5 +1,10 @@
 extends Control
 
+@onready var _consolePanel: GsomConsolePanel = $GsomConsolePanel
+@onready var _plaquePanel: GsomPlaquePanel = $GsomPlaquePanel
+@onready var _buttonConsole: Button = $VBoxContainer/HBoxContainer/Console
+@onready var _buttonPlaque: Button = $VBoxContainer/HBoxContainer/Plaque
+
 
 func _ready() -> void:
 	InputMap.add_action("Console")
@@ -23,6 +28,18 @@ func _ready() -> void:
 	)
 	
 	GsomConsole.log("Hello World.")
+	
+	_consolePanel.is_disabled = !_buttonConsole.button_pressed
+	_buttonConsole.toggled.connect(
+		func (is_on: bool) -> void:
+			_consolePanel.is_disabled = !is_on
+	)
+	
+	_plaquePanel.is_disabled = !_buttonPlaque.button_pressed
+	_buttonPlaque.toggled.connect(
+		func (is_on: bool) -> void:
+			_plaquePanel.is_disabled = !is_on
+	)
 
 
 func _input(event: InputEvent) -> void:

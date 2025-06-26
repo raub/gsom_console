@@ -35,7 +35,7 @@ const _COLOR_VALUE = "#f6d386"
 const _COLOR_INFO = "#a29cf5"
 const _COLOR_DEBUG = "#c3e2e5"
 const _COLOR_WARN = "#f89d2c"
-const _COLOR_ERROR = "#e81608"
+const _COLOR_ERROR = "#ff3c2c" # "#e81608"
 
 
 var _log_text: String = ""
