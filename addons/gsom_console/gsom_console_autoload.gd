@@ -27,15 +27,18 @@ const _TYPE_NAMES: Dictionary = {
 	TYPE_STRING: "String",
 }
 
-const _COLORS_HELP = ["#d4fdeb", "#d4e6fd", "#fdd4e6", "#fdebd4"]
-const _COLOR_PRIMARY = "#ecf4fe"
-const _COLOR_SECONDARY = "#a3b0c7"
-const _COLOR_TYPE = "#95c1fb"
-const _COLOR_VALUE = "#f6d386"
-const _COLOR_INFO = "#a29cf5"
-const _COLOR_DEBUG = "#c3e2e5"
-const _COLOR_WARN = "#f89d2c"
-const _COLOR_ERROR = "#ff3c2c" # "#e81608"
+var COLORS_HELP: Array[String] = ["#d4fdeb", "#d4e6fd", "#fdd4e6", "#fdebd4"]
+var COLOR_PRIMARY: String = "#ecf4fe"
+var COLOR_SECONDARY: String = "#a3b0c7"
+var COLOR_TYPE: String = "#95c1fb"
+var COLOR_VALUE: String = "#f6d386"
+var COLOR_INFO: String = "#a29cf5"
+var COLOR_DEBUG: String = "#c3e2e5"
+var COLOR_WARN: String = "#f89d2c"
+var COLOR_ERROR: String = "#ff3c2c" # "#e81608"
+
+var CMD_SEPARATOR: String = ";"
+var CMD_WAIT: String = "wait"
 
 
 var _log_text: String = ""
@@ -46,6 +49,12 @@ var _log_text: String = ""
 	set(v):
 		_log_text = v
 
+enum TickMode {
+	TICK_MODE_AUTO,
+	TICK_MODE_MANUAL,
+}
+
+var tick_mode: TickMode = TickMode.TICK_MODE_AUTO
 
 var _is_visible: bool = false
 ## Current visibility status. As the UI is not directly linked to
@@ -67,6 +76,7 @@ var _history: PackedStringArray = []
 
 var _cvars: Dictionary = {}
 var _cmds: Dictionary = {}
+var _next: PackedStringArray = []
 var _help_color_idx: int = 0
 
 
@@ -80,7 +90,7 @@ func _ready() -> void:
 	
 	self.log(
 		"Type `%s` to view existing commands and variables." % [
-			_color(_COLOR_VALUE, "[b]help[/b]"),
+			_color(COLOR_VALUE, "[b]help[/b]"),
 		]
 	)
 
@@ -140,9 +150,9 @@ func set_cvar(cvar_name: String, value: Variant) -> void:
 	var type_value: int = typeof(adjusted)
 	var type_name: String = _TYPE_NAMES[type_value]
 	var hint: String = "%s %s %s" % [
-		_color(_COLOR_SECONDARY, ":"),
-		_color(_COLOR_TYPE, type_name),
-		_color(_COLOR_VALUE, str(adjusted)),
+		_color(COLOR_SECONDARY, ":"),
+		_color(COLOR_TYPE, type_name),
+		_color(COLOR_VALUE, str(adjusted)),
 	]
 	_cvars[cvar_name].hint = hint
 	
@@ -216,7 +226,22 @@ func toggle() -> void:
 
 
 ## Submit user input for parsing.
+## Automatically separates by `CMD_SEPARATOR`.
+## Detects CMD_WAIT and postpones the rest
 func submit(expression: String) -> void:
+	var trimmed: String = expression.strip_edges(true, true)
+	var parts: PackedStringArray = trimmed.split(CMD_SEPARATOR, false)
+	
+	for idx: int in range(parts.size()):
+		var part: String = parts[idx]
+		if _submit_part(part):
+			prints('cut', parts, idx)
+			if parts.size() > idx + 1:
+				_next.append_array(parts.slice(idx + 1))
+			return
+
+
+func _submit_part(expression: String) -> bool:
 	var trimmed: String = expression.strip_edges(true, true)
 	
 	var r := RegEx.new()
@@ -224,18 +249,20 @@ func submit(expression: String) -> void:
 	var groups: Array[RegExMatch] = r.search_all(trimmed)
 	
 	if groups.size() < 1:
-		return
+		return false
 	
 	var g0: String = groups[0].get_string()
 	
+	if g0 == CMD_WAIT:
+		return true
+	
 	if has_cmd(g0):
 		var args: PackedStringArray = []
-		for group in groups.slice(1):
-			@warning_ignore("unsafe_method_access")
-			args.push_back(group.get_string())
+		for group: RegExMatch in groups.slice(1):
+			args.append(group.get_string())
 		call_cmd(g0, args)
 		_history_push(expression)
-		return
+		return false
 	
 	if (groups.size() == 1 or groups.size() == 2) and has_cvar(g0):
 		if groups.size() == 2:
@@ -246,15 +273,16 @@ func submit(expression: String) -> void:
 		var type_value: int = typeof(result)
 		var type_name: String = _TYPE_NAMES[type_value]
 		self.log("%s%s%s %s" % [
-				_color(_COLOR_PRIMARY, g0),
-				_color(_COLOR_SECONDARY, ":"),
-				_color(_COLOR_TYPE, type_name),
-				_color(_COLOR_VALUE, str(result)),
+				_color(COLOR_PRIMARY, g0),
+				_color(COLOR_SECONDARY, ":"),
+				_color(COLOR_TYPE, type_name),
+				_color(COLOR_VALUE, str(result)),
 		])
 		_history_push(expression)
-		return
+		return false
 	
 	error("Unrecognized command `%s`." % [expression])
+	return false
 
 
 ## Appends `msg` to `log_text` and emits `on_log`.
@@ -265,22 +293,39 @@ func log(msg: String) -> void:
 
 ## Wraps `msg` with color BBCode and calls `log`.
 func info(msg: String) -> void:
-	self.log(_color(_COLOR_INFO, "[b]info:[/b] %s" % msg))
+	self.log(_color(COLOR_INFO, "[b]info:[/b] %s" % msg))
 
 
 ## Wraps `msg` with color BBCode and calls `log`.
 func debug(msg: String) -> void:
-	self.log(_color(_COLOR_DEBUG, "[b]dbg:[/b] %s" % msg))
+	self.log(_color(COLOR_DEBUG, "[b]dbg:[/b] %s" % msg))
 
 
 ## Wraps `msg` with color BBCode and calls `log`.
 func warn(msg: String) -> void:
-	self.log(_color(_COLOR_WARN, "[b]warn:[/b] %s" % msg))
+	self.log(_color(COLOR_WARN, "[b]warn:[/b] %s" % msg))
 
 
 ## Wraps `msg` with color BBCode and calls `log`.
 func error(msg: String) -> void:
-	self.log(_color(_COLOR_ERROR, "[b]err:[/b] %s" % msg))
+	self.log(_color(COLOR_ERROR, "[b]err:[/b] %s" % msg))
+
+
+## Calls the enqueued by "wait" commands.
+## By default it is called automatically every frame.
+## Only required to call manually if `tick_mode` is manual.
+## There is no harm calling it manually either way.
+func tick() -> void:
+	if _next.size():
+		var prev: String = ";".join(_next)
+		_next.clear()
+		prints('next', prev)
+		submit(prev)
+
+
+func _process(_delta: float) -> void:
+	if tick_mode == TickMode.TICK_MODE_AUTO:
+		tick()
 
 
 func _handle_builtins(cmd_name: String, args: PackedStringArray) -> void:
@@ -314,7 +359,7 @@ func _adjust_type(old_value: Variant, new_value: String) -> Variant:
 
 
 func _get_help_color() -> String:
-	var color: String = _COLORS_HELP[_help_color_idx % _COLORS_HELP.size()]
+	var color: String = COLORS_HELP[_help_color_idx % COLORS_HELP.size()]
 	_help_color_idx = _help_color_idx + 1
 	return color
 
@@ -346,31 +391,31 @@ func _cmd_help(args: PackedStringArray) -> void:
 		for arg: String in args:
 			var color: String = _get_help_color()
 			if _cmds.has(arg):
-				result.push_back(_color(color, "[b]%s[/b] - %s" % [arg, _cmds[arg].help]))
-				result.push_back("\n")
+				result.append(_color(color, "[b]%s[/b] - %s" % [arg, _cmds[arg].help]))
+				result.append("\n")
 			elif _cvars.has(arg):
-				result.push_back(_color(color, "[b]%s[/b] - %s" % [arg, _cvars[arg].help]))
-				result.push_back("\n")
+				result.append(_color(color, "[b]%s[/b] - %s" % [arg, _cvars[arg].help]))
+				result.append("\n")
 			else:
-				result.push_back(_color(_COLOR_ERROR, "[b]%s[/b] - No such command/variable." % arg))
-				result.push_back("\n")
+				result.append(_color(COLOR_ERROR, "[b]%s[/b] - No such command/variable." % arg))
+				result.append("\n")
 		
 		self.log("".join(PackedStringArray(result)))
 		return
 	
-	result.push_back("Available variables:\n")
+	result.append("Available variables:\n")
 	
 	for key: String in _cvars:
 		var color: String = _get_help_color()
-		result.push_back(_color(color, "[b]%s[/b] - %s" % [key, _cvars[key].help]))
-		result.push_back("\n")
+		result.append(_color(color, "[b]%s[/b] - %s" % [key, _cvars[key].help]))
+		result.append("\n")
 	
-	result.push_back("Available commands:\n")
+	result.append("Available commands:\n")
 	
 	for key: String in _cmds:
 		var color: String = _get_help_color()
-		result.push_back(_color(color, "[b]%s[/b] - %s" % [key, _cmds[key].help]))
-		result.push_back("\n")
+		result.append(_color(color, "[b]%s[/b] - %s" % [key, _cmds[key].help]))
+		result.append("\n")
 	
 	self.log("".join(PackedStringArray(result)))
 

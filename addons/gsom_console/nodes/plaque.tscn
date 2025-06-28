@@ -144,6 +144,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/focus = SubResource("StyleBoxEmpty_vn0da")
 placeholder_text = "enter command here..."
+keep_editing_on_text_submit = true
+emoji_menu_enabled = false
+drag_and_drop_selection_enabled = false
 flat = true
 
 [node name="ButtonSubmit" type="Button" parent="Panel/ColumnMain/RowInput"]
