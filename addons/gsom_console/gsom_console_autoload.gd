@@ -39,6 +39,7 @@ var COLOR_ERROR: String = "#ff3c2c" # "#e81608"
 
 var CMD_SEPARATOR: String = ";"
 var CMD_WAIT: String = "wait"
+var EXEC_EXT: String = ".cfg"
 
 
 var _log_text: String = ""
@@ -54,7 +55,11 @@ enum TickMode {
 	TICK_MODE_MANUAL,
 }
 
+## The mode of calling postponed (by `wait`) commands
 var tick_mode: TickMode = TickMode.TICK_MODE_AUTO
+
+## The list of search directories to load console scripts from
+var exec_paths: PackedStringArray = ['user://', 'res://']
 
 var _is_visible: bool = false
 ## Current visibility status. As the UI is not directly linked to
@@ -88,12 +93,13 @@ func _ready() -> void:
 	register_cmd("map", "Switch to a scene by path, or show path to the current one.")
 	register_cmd("alias", "Create a named shortcut for any input text.")
 	register_cmd("echo", "Print back any input.")
+	register_cmd("exec", "Parse and execute commands line by line from a file.")
 	
 	called_cmd.connect(_handle_builtins)
 	
 	self.log(
-		"Type `%s` to view existing commands and variables." % [
-			_color(COLOR_VALUE, "[b]help[/b]"),
+		"Type '[b]%s[/b]' to view existing commands and variables." % [
+			_color(COLOR_VALUE, "help"),
 		]
 	)
 
@@ -186,7 +192,7 @@ func get_cvar(cvar_name: String) -> Variant:
 
 
 ## List all CVAR names.
-func list_cvars() -> Array:
+func list_cvars() -> Array[String]:
 	return _cvars.keys()
 
 
@@ -251,6 +257,7 @@ func toggle() -> void:
 ## Automatically separates by `CMD_SEPARATOR`.
 ## Detects CMD_WAIT and postpones the rest
 func submit(expression: String, track_history: bool = true) -> void:
+	prints("submit", track_history, expression)
 	var trimmed: String = expression.strip_edges(true, true)
 	
 	if _fetch_alias(trimmed, track_history):
@@ -273,6 +280,8 @@ func _fetch_alias(trimmed: String, track_history: bool) -> bool:
 	if !found_alias:
 		return false
 	
+	if track_history:
+		_history_push(trimmed)
 	var alias_text: String = trimmed.substr(found_alias.get_string().length())
 	
 	if !alias_text:
@@ -297,6 +306,10 @@ func _fetch_alias(trimmed: String, track_history: bool) -> bool:
 
 func _submit_part(expression: String, track_history: bool) -> bool:
 	var trimmed: String = expression.strip_edges(true, true)
+	prints("_submit_part", track_history, trimmed)
+	
+	if _fetch_alias(trimmed, track_history):
+		return false
 	
 	var r := RegEx.new()
 	r.compile("\\S+") # negated whitespace character class
@@ -311,7 +324,8 @@ func _submit_part(expression: String, track_history: bool) -> bool:
 		return true
 	
 	if has_alias(g0):
-		_history_push(expression)
+		if track_history:
+			_history_push(trimmed)
 		submit(_aliases[g0], false)
 		return false
 	
@@ -320,7 +334,8 @@ func _submit_part(expression: String, track_history: bool) -> bool:
 		for group: RegExMatch in groups.slice(1):
 			args.append(group.get_string())
 		call_cmd(g0, args)
-		_history_push(expression)
+		if track_history:
+			_history_push(trimmed)
 		return false
 	
 	if (groups.size() == 1 or groups.size() == 2) and has_cvar(g0):
@@ -337,10 +352,11 @@ func _submit_part(expression: String, track_history: bool) -> bool:
 				_color(COLOR_TYPE, type_name),
 				_color(COLOR_VALUE, str(result)),
 		])
-		_history_push(expression)
+		if track_history:
+			_history_push(trimmed)
 		return false
 	
-	error("Unrecognized command `%s`." % [expression])
+	error("Unrecognized command `%s`." % [trimmed])
 	return false
 
 
@@ -378,7 +394,7 @@ func tick() -> void:
 	if _next.size():
 		var prev: String = ";".join(_next)
 		_next.clear()
-		submit(prev)
+		submit(prev, false)
 
 
 func _process(_delta: float) -> void:
@@ -390,6 +406,8 @@ func _process(_delta: float) -> void:
 func _handle_builtins(cmd_name: String, args: PackedStringArray) -> void:
 	if cmd_name == "echo":
 		_cmd_echo(args)
+	if cmd_name == "exec":
+		_cmd_exec(args)
 	if cmd_name == "help":
 		_cmd_help(args)
 	elif cmd_name == "quit":
@@ -427,7 +445,11 @@ func _get_help_color() -> String:
 
 func _cmd_map(args: PackedStringArray) -> void:
 	if !args.size():
-		self.log("The current scene is '%s'." % get_tree().current_scene.scene_file_path)
+		self.log(
+			"The current scene is '[b]%s[/b]'." % [
+				_color(COLOR_VALUE, get_tree().current_scene.scene_file_path),
+			]
+		)
 		return
 	
 	# `map [name]` syntax below
@@ -435,10 +457,19 @@ func _cmd_map(args: PackedStringArray) -> void:
 	if !ResourceLoader.exists(map_name):
 		map_name += ".tscn"
 	if !ResourceLoader.exists(map_name):
-		error("Scene '%s' doesn't exist." % args[0])
+		error(
+			"Scene '[b]%s[/b]' doesn't exist." % [
+				_color(COLOR_VALUE, args[0]),
+			]
+		)
 		return
 	
-	info("Changing scene to '%s'..." % args[0])
+	self.log(
+		"Changing scene to '[b]%s[/b]'..." % [
+			_color(COLOR_VALUE, map_name),
+		]
+	)
+	
 	get_tree().change_scene_to_file(map_name)
 	GsomConsole.hide()
 
@@ -447,6 +478,51 @@ func _cmd_echo(args: PackedStringArray) -> void:
 	if !args.size():
 		return
 	self.log(" ".join(args))
+
+
+func _cmd_exec(args: PackedStringArray) -> void:
+	if !args.size():
+		self.log(
+			"Syntax: 'exec [b]%s[/b]'." % [
+				_color(COLOR_VALUE, "file[%s]" % EXEC_EXT),
+			]
+		)
+		var result: PackedStringArray = []
+		_append_exec_path_list(result)
+		self.log("".join(result)) # using `self` to avoid name collision
+		return
+	
+	var exec_name: String = args[0]
+	_search_and_exec(exec_name)
+
+
+## Function receives a console script name - with or without extension (`EXEC_EXT`).
+## Tries to locate the file in `exec_paths`.
+## Each directory is tried first without the file extension, then with extension.
+## As soon as the first file match found, the file is read and executed, the search stops.
+## The file execution is performed by splitting it line-by line.
+## Then non-empty (and non-whitespace) lines are fed to the `submit(text)` method.
+func _search_and_exec(exec_name: String) -> void:
+	var file: FileAccess = null
+	
+	for dir_path in exec_paths:
+		file = FileAccess.open(dir_path + exec_name, FileAccess.READ)
+		if file:
+			break
+		file = FileAccess.open(dir_path + exec_name + EXEC_EXT, FileAccess.READ)
+		if file:
+			break
+	
+	if !file:
+		error("Script '[b]%s[/b]' doesn't exist." % [_color(COLOR_VALUE, exec_name)])
+		return
+
+	self.log("Executing script '[b]%s[/b]'..." % [_color(COLOR_VALUE, exec_name)])
+	while !file.eof_reached():
+		var line: String = file.get_line().strip_edges()
+		if !line.is_empty():
+			submit(line, false)
+	file.close()
 
 
 func _cmd_help(args: PackedStringArray) -> void:
@@ -517,6 +593,19 @@ func _append_alias_list(dest: PackedStringArray) -> void:
 		var color: String = _get_help_color()
 		dest.append(_color(color, "[b]%s[/b] - %s" % [key, _aliases[key]]))
 		dest.append("\n")
+
+
+# Mutates `dest` by adding exec paths info
+func _append_exec_path_list(dest: PackedStringArray) -> void:
+	if !exec_paths.size():
+		dest.append("There are no exec paths, yet.\n")
+		return;
+	
+	dest.append("Registered exec paths:\n")
+	
+	for path: String in exec_paths:
+		var color: String = _get_help_color()
+		dest.append(_color(color, "\t%s\n" % path))
 
 
 func _history_push(expression: String) -> void:
