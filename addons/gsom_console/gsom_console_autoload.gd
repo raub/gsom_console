@@ -74,8 +74,9 @@ var _history: PackedStringArray = []
 		return _history
 
 
-var _cvars: Dictionary = {}
-var _cmds: Dictionary = {}
+var _cvars: Dictionary[String, Dictionary] = {}
+var _cmds: Dictionary[String, Dictionary] = {}
+var _aliases: Dictionary[String, String] = {}
 var _next: PackedStringArray = []
 var _help_color_idx: int = 0
 
@@ -85,6 +86,8 @@ func _ready() -> void:
 	register_cmd("quit", "Close the application, exit to desktop.")
 	register_cmd("mainscene", "Reload the main scene (as in project settings).")
 	register_cmd("map", "Switch to a scene by path, or show path to the current one.")
+	register_cmd("alias", "Create a named shortcut for any input text.")
+	register_cmd("echo", "Print back any input.")
 	
 	called_cmd.connect(_handle_builtins)
 	
@@ -127,6 +130,20 @@ func register_cmd(cmd_name: String, help_text: String = "") -> void:
 	_cmds[cmd_name] = {
 		"help": help_text if !help_text.is_empty() else "[No description].",
 	}
+
+
+## Add or remove an alias.
+## CVARs and CMDs take precedence - can't override with alias.
+## Empty `alias_text` will remove the existing alias.
+func alias(alias_name: String, alias_text: String = "") -> void:
+	if _cvars.has(alias_name) or _cmds.has(alias_name):
+		push_warning("GsomConsole.alias: name '%s' already taken." % alias_name)
+		return
+	
+	if alias_text:
+		_aliases[alias_name] = alias_text
+	else:
+		_aliases.erase(alias_name)
 
 
 ## Manually call a command, as if the call was parsed from user input.
@@ -183,6 +200,11 @@ func has_cmd(cmd_name: String) -> bool:
 	return _cmds.has(cmd_name)
 
 
+## Check if there is an ALIAS with given name
+func has_alias(alias_name: String) -> bool:
+	return _aliases.has(alias_name)
+
+
 ## Get a list of CVAR and CMD names that start with the given `text`.
 func get_matches(text: String) -> PackedStringArray:
 	var matches: PackedStringArray = []
@@ -228,20 +250,52 @@ func toggle() -> void:
 ## Submit user input for parsing.
 ## Automatically separates by `CMD_SEPARATOR`.
 ## Detects CMD_WAIT and postpones the rest
-func submit(expression: String) -> void:
+func submit(expression: String, track_history: bool = true) -> void:
 	var trimmed: String = expression.strip_edges(true, true)
+	
+	if _fetch_alias(trimmed, track_history):
+		return
+	
 	var parts: PackedStringArray = trimmed.split(CMD_SEPARATOR, false)
 	
 	for idx: int in range(parts.size()):
 		var part: String = parts[idx]
-		if _submit_part(part):
-			prints('cut', parts, idx)
+		if _submit_part(part, track_history):
 			if parts.size() > idx + 1:
 				_next.append_array(parts.slice(idx + 1))
 			return
 
 
-func _submit_part(expression: String) -> bool:
+func _fetch_alias(trimmed: String, track_history: bool) -> bool:
+	var r := RegEx.new()
+	r.compile("^alias\\s+")
+	var found_alias: RegExMatch = r.search(trimmed)
+	if !found_alias:
+		return false
+	
+	var alias_text: String = trimmed.substr(found_alias.get_string().length())
+	
+	if !alias_text:
+		var result: PackedStringArray = []
+		_append_alias_list(result)
+		self.log("".join(result)) # using `self` to avoid name collision
+		return true
+	
+	var r1 := RegEx.new()
+	r1.compile("\\S+") # negated whitespace character class
+	var alias_groups: Array[RegExMatch] = r1.search_all(alias_text)
+	var alias_name: String = alias_groups[0].get_string()
+	
+	if alias_groups.size() < 2:
+		alias(alias_name)
+		return true
+	
+	var alias_rest: String = alias_text.substr(alias_name.length());
+	alias(alias_name, alias_rest.strip_edges(true, true))
+	return true
+	
+
+func _submit_part(expression: String, track_history: bool) -> bool:
 	var trimmed: String = expression.strip_edges(true, true)
 	
 	var r := RegEx.new()
@@ -255,6 +309,11 @@ func _submit_part(expression: String) -> bool:
 	
 	if g0 == CMD_WAIT:
 		return true
+	
+	if has_alias(g0):
+		_history_push(expression)
+		submit(_aliases[g0], false)
+		return false
 	
 	if has_cmd(g0):
 		var args: PackedStringArray = []
@@ -319,7 +378,6 @@ func tick() -> void:
 	if _next.size():
 		var prev: String = ";".join(_next)
 		_next.clear()
-		prints('next', prev)
 		submit(prev)
 
 
@@ -328,7 +386,10 @@ func _process(_delta: float) -> void:
 		tick()
 
 
+# "wait" and "alias" are non-commands, handled separately in `submit`
 func _handle_builtins(cmd_name: String, args: PackedStringArray) -> void:
+	if cmd_name == "echo":
+		_cmd_echo(args)
 	if cmd_name == "help":
 		_cmd_help(args)
 	elif cmd_name == "quit":
@@ -382,6 +443,12 @@ func _cmd_map(args: PackedStringArray) -> void:
 	GsomConsole.hide()
 
 
+func _cmd_echo(args: PackedStringArray) -> void:
+	if !args.size():
+		return
+	self.log(" ".join(args))
+
+
 func _cmd_help(args: PackedStringArray) -> void:
 	var i: int = 0
 	var result: PackedStringArray = []
@@ -403,21 +470,53 @@ func _cmd_help(args: PackedStringArray) -> void:
 		self.log("".join(PackedStringArray(result)))
 		return
 	
-	result.append("Available variables:\n")
+	_append_cvar_list(result)
+	_append_cmd_list(result)
+	_append_alias_list(result)
+	
+	self.log("".join(result)) # using `self` to avoid name collision
+
+
+# Mutates `dest` by adding CMDs info
+func _append_cvar_list(dest: PackedStringArray) -> void:
+	if !_cvars.size():
+		dest.append("There are no variables, yet.\n")
+		return
+	
+	dest.append("Available variables:\n")
 	
 	for key: String in _cvars:
 		var color: String = _get_help_color()
-		result.append(_color(color, "[b]%s[/b] - %s" % [key, _cvars[key].help]))
-		result.append("\n")
+		dest.append(_color(color, "[b]%s[/b] - %s" % [key, _cvars[key].help]))
+		dest.append("\n")
+
+
+# Mutates `dest` by adding CMDs info
+func _append_cmd_list(dest: PackedStringArray) -> void:
+	if !_cmds.size():
+		dest.append("There are no commands, yet.\n")
+		return
 	
-	result.append("Available commands:\n")
+	dest.append("Available commands:\n")
 	
 	for key: String in _cmds:
 		var color: String = _get_help_color()
-		result.append(_color(color, "[b]%s[/b] - %s" % [key, _cmds[key].help]))
-		result.append("\n")
+		dest.append(_color(color, "[b]%s[/b] - %s" % [key, _cmds[key].help]))
+		dest.append("\n")
+
+
+# Mutates `dest` by adding ALIASes info
+func _append_alias_list(dest: PackedStringArray) -> void:
+	if !_aliases.size():
+		dest.append("There are no aliases, yet.\n")
+		return;
 	
-	self.log("".join(PackedStringArray(result)))
+	dest.append("Available aliases:\n")
+	
+	for key: String in _aliases:
+		var color: String = _get_help_color()
+		dest.append(_color(color, "[b]%s[/b] - %s" % [key, _aliases[key]]))
+		dest.append("\n")
 
 
 func _history_push(expression: String) -> void:
