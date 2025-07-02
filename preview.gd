@@ -28,6 +28,7 @@ func _ready() -> void:
 	)
 	
 	GsomConsole.log("Hello World.")
+	GsomConsole.log("You can try [b]exec example[/b] (see res://example.cfg).")
 	
 	_consolePanel.is_disabled = !_buttonConsole.button_pressed
 	_buttonConsole.toggled.connect(

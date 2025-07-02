@@ -58,8 +58,8 @@ var _viewHeight: float = _MIN_HEIGHT:
 @onready var _column_hint: Control = $Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint
 @onready var _resize_bottom: Control = $Resizers/ResizeBottom
 
-var CommonLogic: GDScript = preload('../tools/common_logic.gd');
-var _common_logic = null;
+var CommonLogic: GDScript = preload('../tools/common_ui.gd')
+var _common_logic = null
 
 
 func _ready() -> void:
@@ -70,7 +70,7 @@ func _ready() -> void:
 		_edit_cmd,
 		_container_hint,
 		_column_hint,
-	);
+	)
 	
 	_resize_bottom.gui_input.connect(_handle_input_resize_bottom)
 

@@ -63,8 +63,8 @@ var _viewHeight: float = _MIN_HEIGHT:
 @onready var _resize_left: Control = $Resizers/ResizeLeft
 @onready var _resize_right: Control = $Resizers/ResizeRight
 
-var CommonLogic: GDScript = preload('../tools/common_logic.gd');
-var _common_logic = null;
+var CommonLogic: GDScript = preload('../tools/common_ui.gd')
+var _common_logic = null
 
 func _ready() -> void:
 	_common_logic = CommonLogic.new(
@@ -74,7 +74,7 @@ func _ready() -> void:
 		_edit_cmd,
 		_container_hint,
 		_column_hint,
-	);
+	)
 	
 	_draggable.gui_input.connect(_handle_input_drag)
 	_resize_top.gui_input.connect(_handle_input_resize_top)

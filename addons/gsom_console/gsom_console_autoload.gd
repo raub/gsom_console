@@ -79,10 +79,12 @@ var _history: PackedStringArray = []
 		return _history
 
 
+const AstParser := preload('./tools/ast_parser.gd')
+
 var _cvars: Dictionary[String, Dictionary] = {}
 var _cmds: Dictionary[String, Dictionary] = {}
 var _aliases: Dictionary[String, String] = {}
-var _next: PackedStringArray = []
+var _next: Array[Array] = []
 var _help_color_idx: int = 0
 
 
@@ -254,93 +256,67 @@ func toggle() -> void:
 
 
 ## Submit user input for parsing.
-## Automatically separates by `CMD_SEPARATOR`.
-## Detects CMD_WAIT and postpones the rest
+## cmd arg1 arg2
+## cmd1 arg1; cmd2
+## cmd1; wait; cmd2
+## cmd1 "text; text"; cmd2
 func submit(expression: String, track_history: bool = true) -> void:
-	prints("submit", track_history, expression)
-	var trimmed: String = expression.strip_edges(true, true)
-	
-	if _fetch_alias(trimmed, track_history):
+	var parsed: AstParser = AstParser.new(expression)
+	if parsed.error:
+		self.error("Syntax error. `%s`" % [parsed.error])
 		return
 	
-	var parts: PackedStringArray = trimmed.split(CMD_SEPARATOR, false)
+	if track_history:
+		_history_push(expression.strip_edges())
 	
-	for idx: int in range(parts.size()):
-		var part: String = parts[idx]
-		if _submit_part(part, track_history):
-			if parts.size() > idx + 1:
-				_next.append_array(parts.slice(idx + 1))
-			return
+	_submit_ast(parsed.ast)
 
 
-func _fetch_alias(trimmed: String, track_history: bool) -> bool:
-	var r := RegEx.new()
-	r.compile("^alias\\s+")
-	var found_alias: RegExMatch = r.search(trimmed)
-	if !found_alias:
+func _submit_ast(ast: Array[PackedStringArray]) -> void:
+	for i: int in ast.size():
+		var part: PackedStringArray = ast[i]
+		if part[0] == CMD_WAIT:
+			_next.append(ast.slice(i + 1))
+			break
+			
+		_submit_part(part)
+
+
+func _try_create_alias(ast_part: PackedStringArray) -> bool:
+	if ast_part[0] != "alias":
 		return false
 	
-	if track_history:
-		_history_push(trimmed)
-	var alias_text: String = trimmed.substr(found_alias.get_string().length())
-	
-	if !alias_text:
+	if ast_part.size() == 1:
 		var result: PackedStringArray = []
 		_append_alias_list(result)
 		self.log("".join(result)) # using `self` to avoid name collision
 		return true
 	
-	var r1 := RegEx.new()
-	r1.compile("\\S+") # negated whitespace character class
-	var alias_groups: Array[RegExMatch] = r1.search_all(alias_text)
-	var alias_name: String = alias_groups[0].get_string()
-	
-	if alias_groups.size() < 2:
-		alias(alias_name)
+	if ast_part.size() == 2:
+		alias(ast_part[1])
 		return true
 	
-	var alias_rest: String = alias_text.substr(alias_name.length());
-	alias(alias_name, alias_rest.strip_edges(true, true))
+	alias(ast_part[1], " ".join(ast_part.slice(2)))
 	return true
-	
 
-func _submit_part(expression: String, track_history: bool) -> bool:
-	var trimmed: String = expression.strip_edges(true, true)
-	prints("_submit_part", track_history, trimmed)
-	
-	if _fetch_alias(trimmed, track_history):
+
+func _submit_part(ast_part: PackedStringArray) -> bool:
+	if _try_create_alias(ast_part):
 		return false
 	
-	var r := RegEx.new()
-	r.compile("\\S+") # negated whitespace character class
-	var groups: Array[RegExMatch] = r.search_all(trimmed)
-	
-	if groups.size() < 1:
-		return false
-	
-	var g0: String = groups[0].get_string()
-	
-	if g0 == CMD_WAIT:
-		return true
+	var g0: String = ast_part[0]
 	
 	if has_alias(g0):
-		if track_history:
-			_history_push(trimmed)
 		submit(_aliases[g0], false)
 		return false
 	
 	if has_cmd(g0):
-		var args: PackedStringArray = []
-		for group: RegExMatch in groups.slice(1):
-			args.append(group.get_string())
-		call_cmd(g0, args)
-		if track_history:
-			_history_push(trimmed)
+		call_cmd(g0, ast_part.slice(1))
 		return false
 	
-	if (groups.size() == 1 or groups.size() == 2) and has_cvar(g0):
-		if groups.size() == 2:
-			var g1: String = groups[1].get_string()
+	if (ast_part.size() == 1 or ast_part.size() == 2) and has_cvar(g0):
+		if ast_part.size() == 2:
+			var g1: String = ast_part[1]
 			set_cvar(g0, g1)
 		
 		var result: Variant = get_cvar(g0)
@@ -352,11 +328,9 @@ func _submit_part(expression: String, track_history: bool) -> bool:
 				_color(COLOR_TYPE, type_name),
 				_color(COLOR_VALUE, str(result)),
 		])
-		if track_history:
-			_history_push(trimmed)
 		return false
 	
-	error("Unrecognized command `%s`." % [trimmed])
+	error("Unrecognized command `%s`." % [" ".join(ast_part)])
 	return false
 
 
@@ -391,10 +365,14 @@ func error(msg: String) -> void:
 ## Only required to call manually if `tick_mode` is manual.
 ## There is no harm calling it manually either way.
 func tick() -> void:
-	if _next.size():
-		var prev: String = ";".join(_next)
-		_next.clear()
-		submit(prev, false)
+	if !_next.size():
+		return
+	
+	var _prev = _next
+	_next = []
+	
+	for ast: Array[PackedStringArray] in _prev:
+		_submit_ast(ast)
 
 
 func _process(_delta: float) -> void:
@@ -585,7 +563,7 @@ func _append_cmd_list(dest: PackedStringArray) -> void:
 func _append_alias_list(dest: PackedStringArray) -> void:
 	if !_aliases.size():
 		dest.append("There are no aliases, yet.\n")
-		return;
+		return
 	
 	dest.append("Available aliases:\n")
 	
@@ -599,7 +577,7 @@ func _append_alias_list(dest: PackedStringArray) -> void:
 func _append_exec_path_list(dest: PackedStringArray) -> void:
 	if !exec_paths.size():
 		dest.append("There are no exec paths, yet.\n")
-		return;
+		return
 	
 	dest.append("Registered exec paths:\n")
 	
