@@ -76,9 +76,9 @@ var _is_draggable := true
 		_assign_is_draggable()
 
 
-var _is_disabled := true
-## Makes window panel disabled. 
-@export var is_disabled: bool = true:
+var _is_disabled := false
+## Hides this console UI regardless of the singleton visibility state.
+@export var is_disabled: bool = false:
 	get:
 		return _is_disabled
 	set(v):

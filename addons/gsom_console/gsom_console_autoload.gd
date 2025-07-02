@@ -35,7 +35,7 @@ var COLOR_VALUE: String = "#f6d386"
 var COLOR_INFO: String = "#a29cf5"
 var COLOR_DEBUG: String = "#c3e2e5"
 var COLOR_WARN: String = "#f89d2c"
-var COLOR_ERROR: String = "#ff3c2c" # "#e81608"
+var COLOR_ERROR: String = "#ff3c2c"
 
 var CMD_SEPARATOR: String = ";"
 var CMD_WAIT: String = "wait"
@@ -96,6 +96,7 @@ func _ready() -> void:
 	register_cmd("alias", "Create a named shortcut for any input text.")
 	register_cmd("echo", "Print back any input.")
 	register_cmd("exec", "Parse and execute commands line by line from a file.")
+	register_cmd("wait", "A special command to postpone the execution by 1 tick.")
 	
 	called_cmd.connect(_handle_builtins)
 	
