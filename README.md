@@ -70,7 +70,8 @@ It holds all the common console logic and is not tied to any specific UI.
     a set of colors that help lists will use to alternate between strings. There
     may be any number of colors - the strings will cycle through them.
 * `COLOR_PRIMARY: String` - default `"#ecf4fe"`, color to display names of CVARs.
-* `COLOR_SECONDARY: String` - default `"#a3b0c7"`, secondary color related to names of CVARs (used for ":").
+* `COLOR_SECONDARY: String` - default `"#a3b0c7"`, secondary color related
+    to names of CVARs (used for ":").
 * `COLOR_TYPE: String` - default `"#95c1fb"`, color to display types of CVARs.
 * `COLOR_VALUE: String` - default `"#f6d386"`, color to display values of CVARs.
 * `COLOR_INFO: String` - default `"#a29cf5"`, color for `info()` logging.
@@ -78,7 +79,8 @@ It holds all the common console logic and is not tied to any specific UI.
 * `COLOR_WARN: String` - default `"#f89d2c"`, color for `warn()` logging.
 * `COLOR_ERROR: String` - default `"#ff3c2c"`, color for `error()` logging.
 * `CMD_SEPARATOR: String` - default `";"`, a character to use as a separator between commands.
-* `CMD_WAIT: String` - default `"wait"`, this command is treated as `wait`, if you want to change the default name.
+* `CMD_WAIT: String` - default `"wait"`, this command is treated as `wait`,
+    if you want to change the default name.
 * `EXEC_EXT: String` - default `".cfg"`, used to facilitate the search for config scripts
     by automatically checking the provided path with this suffix.
 
@@ -99,8 +101,10 @@ It holds all the common console logic and is not tied to any specific UI.
 * `has_cvar(cvar_name: String) -> bool` - check if there is a CVAR with given name.
 * `has_cmd(cmd_name: String) -> bool` - check if there is a CMD with given name.
 * `has_alias(alias_name: String) -> bool` - check if there is an ALIAS with given name.
-* `get_matches(text: String) -> PackedStringArray` - get a list of CVAR and CMD names that start with the given `text`.
-* `tick() -> void` - set `is_visible` to `false` if it was `true`.
+* `get_matches(text: String) -> PackedStringArray` - get a list of CVAR and CMD
+    names that start with the given `text`.
+* `tick() -> void` - calls the enqueued by "wait" commands, if any. By default
+    it is called automatically every frame.
 * `hide() -> void` - set `is_visible` to `false` if it was `true`.
     Only emits `toggled` if indeed changed.
 * `show() -> void` - set `is_visible` to `true` if it was `false`.
@@ -135,7 +139,8 @@ It holds all the common console logic and is not tied to any specific UI.
 
 ## GsomConsolePanel
 
-The default UI console panel, available as a descendant of `Control` node.
+The default UI console panel (like Half-Life 1 Steam),
+available as a descendant of `Control` node.
 
 **Properties**
 
@@ -157,7 +162,8 @@ The default UI console panel, available as a descendant of `Control` node.
 
 ## GsomPlaquePanel
 
-The plaque-mode UI, available as a descendant of `Control` node.
+The plaque-mode UI (like Q1, Serious Sam),
+available as a descendant of `Control` node.
 
 **Properties**
 
@@ -176,9 +182,9 @@ The plaque-mode UI, available as a descendant of `Control` node.
 
 The development focus of this plugin is following:
 
-* Implement scripting logic: `alias`, `wait`, `;`, `exec`.
 * Consider allowing the `+/-` commands if that is going to work at all.
-* Add components: top console plaque (Q1, Serious Sam), log overlay, bottom-left console (TES Oblivion/Skyrim).
-* Expand component options: colors, verbosity/log levels - maybe also add cvars that control those on runtime.
+* Add components: log overlay, bottom-left console (TES Oblivion/Skyrim).
+* Expand component options: colors, verbosity/log levels - maybe also
+    add cvars that control those on runtime.
 * Improve autocompletion/matching and hints.
 * Think about some generic commands/cvars that are relevant for ALL projects.
