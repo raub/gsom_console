@@ -1,4 +1,4 @@
-extends Object
+extends RefCounted
 
 var _is_hint: bool = false
 var _list_hint: PackedStringArray = []
@@ -27,6 +27,9 @@ func _init(
 	_edit_cmd = edit_cmd
 	_container_hint = container_hint
 	_column_hint = column_hint
+	
+	if Engine.is_editor_hint():
+		return
 	
 	GsomConsole.toggled.connect(_handle_visibility)
 	_handle_visibility(GsomConsole.is_visible)

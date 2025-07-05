@@ -1,9 +1,9 @@
 [gd_scene load_steps=8 format=3 uid="uid://f03t5oy48uev"]
 
-[ext_resource type="Script" uid="uid://dtj85h6uxam0w" path="res://addons/gsom_console/tools/console_wrap.gd" id="1_f3lxn"]
 [ext_resource type="Script" uid="uid://gpbke54oxky2" path="res://preview.gd" id="1_jsdml"]
 [ext_resource type="Texture2D" uid="uid://bxk40cnadw2qu" path="res://game.jpg" id="2_uro0l"]
-[ext_resource type="Script" uid="uid://mm4q1fr3n8i5" path="res://addons/gsom_console/tools/plaque_wrap.gd" id="4_rg8be"]
+[ext_resource type="Script" uid="uid://dtj85h6uxam0w" path="res://addons/gsom_console/tools/console_wrap.gd" id="3_n3s36"]
+[ext_resource type="Script" uid="uid://mm4q1fr3n8i5" path="res://addons/gsom_console/tools/plaque_wrap.gd" id="4_6urkv"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pytbx"]
 content_margin_left = 16.0
@@ -100,19 +100,20 @@ focus_mode = 0
 toggle_mode = true
 text = "Plaque"
 
+[node name="GsomConsolePanel" type="Control" parent="."]
+custom_minimum_size = Vector2(480, 320)
+anchors_preset = 0
+offset_left = 431.0
+offset_top = 369.0
+offset_right = 1168.0
+offset_bottom = 775.0
+script = ExtResource("3_n3s36")
+metadata/_custom_type_script = "uid://dtj85h6uxam0w"
+
 [node name="GsomPlaquePanel" type="Control" parent="."]
 custom_minimum_size = Vector2(0, 320)
 anchors_preset = 0
 anchor_right = 1.0
 offset_bottom = 320.0
-script = ExtResource("4_rg8be")
-
-[node name="GsomConsolePanel" type="Control" parent="."]
-custom_minimum_size = Vector2(480, 320)
-anchors_preset = 0
-offset_left = 420.0
-offset_top = 403.0
-offset_right = 900.0
-offset_bottom = 723.0
-script = ExtResource("1_f3lxn")
-metadata/_custom_type_script = "uid://dtj85h6uxam0w"
+script = ExtResource("4_6urkv")
+metadata/_custom_type_script = "uid://mm4q1fr3n8i5"
