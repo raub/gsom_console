@@ -10,6 +10,11 @@ You can use CVARs as global variables and settings. CMDs are like global events/
 
 There are special built-in commands like `alias`, `exec`, `wait`, `echo`, `map`, `quit`.
 
+See [example](preview.gd) script.
+
+[![screenshot_1](/gdignore/thumbnail_1.jpg)](/gdignore/screenshot_1.jpg)
+[![screenshot_2](/gdignore/thumbnail_2.jpg)](/gdignore/screenshot_2.jpg)
+
 Supported variable types: `bool, int, float, String` - the variable type
 is determined when it is registered with an initial value.
 After that, new values are interpreted as being of that type.
@@ -29,10 +34,26 @@ doesn't do anything specific per CMD call - only emits the `called_cmd` signal.
 * `do_something abc -1 20 true 3.3` -> will
     emit `called_cmd.emit("do_something", ["abc", "-1", "20", "true", "3.3"])`.
 
-See [example](preview.gd) script.
+**Built-in Commands**:
 
-[![screenshot_1](/gdignore/thumbnail_1.jpg)](/gdignore/screenshot_1.jpg)
-[![screenshot_2](/gdignore/thumbnail_2.jpg)](/gdignore/screenshot_2.jpg)
+* `;` - not exactly a command, but a way to write multiple commands into one line.
+    Even more useful in context of **alias**. E.g. `alias x "echo hi; alias x echo bye"`.
+* `help [name1, name2, ...]` - collect and display the currently available aliases,
+    CVARs, and CMDs. If any optional parameters `nameN` are provided, the console will
+    only display the matching info.
+* `exec name[.ext]` - executes a config script line-by-line.
+* `alias [name, "any text"]` - without arguments it will list all available aliases.
+    If only name is given, it will erase the alias. If the alias text is also provided,
+    then it will be stored for future use under that name.
+* `echo "any text"; echo any text` - logs back the given text or multiple arguments.
+* `map [name]` - if called without arguments, shows the current scene name. With an argument,
+    it will try to change scene to the given one (by path). E.g. `map a/b/c` -> change
+    scene to `res://a/b/c.tscn`. The `.tscn` suffix is optional for this command.
+* `mainscene` - immediately switch to the project's main scene, as per project settings.
+* `quit` - immediately closes the application.
+* `wait` - a special command to postpone the execution by 1 tick. This makes most sense
+    together with `alias` and some frame-by-frame logic. For example,
+    `cmd1; wait; cmd2` - the two commands will be executed on different frames.
 
 
 ## GsomConsole
@@ -53,6 +74,8 @@ It holds all the common console logic and is not tied to any specific UI.
 
 **Properties**
 
+* `CommonUi` - common UI logic reusable for console-like components.
+* `AstParser` - helper class to parse console commands into ASTs.
 * `tick_mode: TickMode` - default `TickMode.TICK_MODE_AUTO`,
     the mode of calling postponed (by `wait`) commands. By default, it happens every
     frame automatically. But you can seize manual control over this process.
@@ -116,25 +139,6 @@ It holds all the common console logic and is not tied to any specific UI.
 * `debug(msg: String) -> void` - wraps `msg` with color BBCode and calls `log`.
 * `warn(msg: String) -> void` - wraps `msg` with color BBCode and calls `log`.
 * `error(msg: String) -> void` - wraps `msg` with color BBCode and calls `log`.
-
-**Commands**:
-
-* `help [name1, name2, ...]` - collect and display the currently available CVARs and CMDs.
-    If any optional parameters `nameN` are provided, the console will
-    only display the matching info.
-* `exec name[.ext]` - executes a config script line-by-line.
-* `alias [name, "any text"]` - without arguments it will list all available aliases.
-    If only name is given, it will erase the alias. If the alias text is also provided,
-    then it will be stored for future use under that name.
-* `echo "any text"` - logs back the given text.
-* `map [name]` - if called without arguments, shows the current scene name. With an argument,
-    it will try to change scene to the given one (by path). E.g. `map a/b/c` -> change
-    scene to `res://a/b/c.tscn`. The `.tscn` suffix is optional for this command.
-* `mainscene` - immediately switch to the project's main scene, as per project settings.
-* `quit` - immediately closes the application.
-* `wait` - a special command to postpone the execution by 1 tick. This makes most sense
-    together with `alias` and some frame-by-frame logic. For example,
-    `cmd1; wait; cmd2` - the two commands will be executed on different frames.
 
 
 ## GsomConsolePanel

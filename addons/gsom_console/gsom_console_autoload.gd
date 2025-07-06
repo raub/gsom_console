@@ -79,6 +79,7 @@ var __history: PackedStringArray = []
 		return __history
 
 
+const CommonUi := preload('./tools/common_ui.gd')
 const AstParser := preload('./tools/ast_parser.gd')
 
 var __cvars: Dictionary[String, Dictionary] = {}

@@ -62,12 +62,11 @@ var __view_height: float = __MIN_HEIGHT:
 @onready var __resize_left: Control = $Resizers/ResizeLeft
 @onready var __resize_right: Control = $Resizers/ResizeRight
 
-var __CommonLogic: GDScript = preload('../tools/common_ui.gd')
 var __common_logic = null
 
 
 func _ready() -> void:
-	__common_logic = __CommonLogic.new(
+	__common_logic = GsomConsole.CommonUi.new(
 		__label_log,
 		__button_close,
 		__button_submit,

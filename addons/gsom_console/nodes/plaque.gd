@@ -47,12 +47,11 @@ var __view_height: float = __MIN_HEIGHT:
 @onready var __column_hint: Control = $Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint
 @onready var __resize_bottom: Control = $Resizers/ResizeBottom
 
-var __CommonLogic: GDScript = preload('../tools/common_ui.gd')
 var __common_logic = null
 
 
 func _ready() -> void:
-	__common_logic = __CommonLogic.new(
+	__common_logic = GsomConsole.CommonUi.new(
 		__label_log,
 		__button_close,
 		__button_submit,
