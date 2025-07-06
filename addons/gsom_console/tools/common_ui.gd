@@ -1,16 +1,16 @@
 extends RefCounted
 
-var _is_hint: bool = false
-var _list_hint: PackedStringArray = []
-var _is_history: bool = false
-var _index: int = 0
+var __is_hint: bool = false
+var __list_hint: PackedStringArray = []
+var __is_history: bool = false
+var __index: int = 0
 
-var _label_log: RichTextLabel = null
-var _button_close: Button = null
-var _button_submit: Button = null
-var _edit_cmd: LineEdit = null
-var _container_hint: Control = null
-var _column_hint: Control = null
+var __label_log: RichTextLabel = null
+var __button_close: Button = null
+var __button_submit: Button = null
+var __edit_cmd: LineEdit = null
+var __container_hint: Control = null
+var __column_hint: Control = null
 
 
 func _init(
@@ -21,101 +21,101 @@ func _init(
 	container_hint: Control,
 	column_hint: Control,
 ) -> void:
-	_label_log = label_log
-	_button_close = button_close
-	_button_submit = button_submit
-	_edit_cmd = edit_cmd
-	_container_hint = container_hint
-	_column_hint = column_hint
+	__label_log = label_log
+	__button_close = button_close
+	__button_submit = button_submit
+	__edit_cmd = edit_cmd
+	__container_hint = container_hint
+	__column_hint = column_hint
 	
 	if Engine.is_editor_hint():
 		return
 	
-	GsomConsole.toggled.connect(_handle_visibility)
-	_handle_visibility(GsomConsole.is_visible)
+	GsomConsole.toggled.connect(__handle_visibility)
+	__handle_visibility(GsomConsole.is_visible)
 	
-	GsomConsole.logged.connect(_handle_log_change)
-	_handle_log_change()
+	GsomConsole.logged.connect(__handle_log_change)
+	__handle_log_change()
 	
-	if _button_close:
-		_button_close.pressed.connect(GsomConsole.hide)
-	if _button_submit:
-		_button_submit.pressed.connect(_handle_submit)
+	if __button_close:
+		__button_close.pressed.connect(GsomConsole.hide)
+	if __button_submit:
+		__button_submit.pressed.connect(__handle_submit)
 	
-	if _edit_cmd:
-		_edit_cmd.text_submitted.connect(_handle_submit)
-		_edit_cmd.gui_input.connect(_handle_edit_keys)
-		_edit_cmd.text_changed.connect(_handle_text_change)
-		_handle_text_change(_edit_cmd.text)
+	if __edit_cmd:
+		__edit_cmd.text_submitted.connect(__handle_submit)
+		__edit_cmd.gui_input.connect(__handle_edit_keys)
+		__edit_cmd.text_changed.connect(__handle_text_change)
+		__handle_text_change(__edit_cmd.text)
 	
-	if _column_hint:
-		for child: Button in _column_hint.get_children():
-			child.pressed.connect(_handle_hint_button.bind(child))
+	if __column_hint:
+		for child: Button in __column_hint.get_children():
+			child.pressed.connect(__handle_hint_button.bind(child))
 
 
 #region Console Input Handlers
 
-func _handle_visibility(is_visible: bool) -> void:
+func __handle_visibility(is_visible: bool) -> void:
 	if is_visible:
-		if _edit_cmd:
-			_edit_cmd.grab_focus()
+		if __edit_cmd:
+			__edit_cmd.grab_focus()
 	else:
-		if _edit_cmd:
-			_edit_cmd.text = ""
-		_reset_hint_state()
+		if __edit_cmd:
+			__edit_cmd.text = ""
+		__reset_hint_state()
 
 
-func _handle_log_change(_text: String = "") -> void:
-	if _label_log:
-		_label_log.text = GsomConsole.log_text
+func __handle_log_change(_text: String = "") -> void:
+	if __label_log:
+		__label_log.text = GsomConsole.log_text
 
 
-func _handle_hint_button(sender: Button) -> void:
-	_apply_hint(sender.text)
+func __handle_hint_button(sender: Button) -> void:
+	__apply_hint(sender.text)
 
 
-func _handle_text_change(text: String) -> void:
-	if _button_submit:
-		_button_submit.disabled = !text
+func __handle_text_change(text: String) -> void:
+	if __button_submit:
+		__button_submit.disabled = !text
 	
-	_is_history = false
-	_index = 0
+	__is_history = false
+	__index = 0
 	
 	if !text:
-		if _container_hint:
-			_container_hint.visible = false
-		_is_hint = false
-		_render_hints()
+		if __container_hint:
+			__container_hint.visible = false
+		__is_hint = false
+		__render_hints()
 		return
 	
 	var match_list: PackedStringArray = GsomConsole.get_matches(text)
 	if !match_list.size():
 		return
 	
-	_list_hint = match_list.duplicate()
-	if _container_hint:
-		_container_hint.visible = true
-	_render_hints()
+	__list_hint = match_list.duplicate()
+	if __container_hint:
+		__container_hint.visible = true
+	__render_hints()
 
 
-func _handle_submit(_text: String = "") -> void:
-	var cmd: String = _edit_cmd.text if _edit_cmd else ""
+func __handle_submit(_text: String = "") -> void:
+	var cmd: String = __edit_cmd.text if __edit_cmd else ""
 	
-	if !_is_hint:
-		_reset_hint_state()
+	if !__is_hint:
+		__reset_hint_state()
 		
 		if !cmd:
 			return
 		
-		if _edit_cmd:
-			_edit_cmd.text = ""
+		if __edit_cmd:
+			__edit_cmd.text = ""
 		GsomConsole.submit(cmd)
 		return
 	
-	_apply_from_list()
+	__apply_from_list()
 
 
-func _handle_edit_keys(event: InputEvent) -> void:
+func __handle_edit_keys(event: InputEvent) -> void:
 	if (
 		Input.mouse_mode != Input.MOUSE_MODE_VISIBLE and
 		Input.mouse_mode != Input.MOUSE_MODE_CONFINED
@@ -123,56 +123,56 @@ func _handle_edit_keys(event: InputEvent) -> void:
 		return
 	
 	if event is InputEventKey:
-		_handle_key(event)
+		__handle_key(event)
 
 
-func _handle_key(event: InputEventKey) -> void:
+func __handle_key(event: InputEventKey) -> void:
 	if (
 		event.keycode == KEY_UP or
 		event.keycode == KEY_DOWN or
-		(_is_hint and event.keycode == KEY_ESCAPE)
+		(__is_hint and event.keycode == KEY_ESCAPE)
 	):
-		if _edit_cmd:
-			_edit_cmd.accept_event()
+		if __edit_cmd:
+			__edit_cmd.accept_event()
 	
 	if !event.is_pressed():
-		if (_is_hint and event.keycode == KEY_ESCAPE):
-			_reset_hint_state()
+		if (__is_hint and event.keycode == KEY_ESCAPE):
+			__reset_hint_state()
 		return
 	
-	var cmd: String = _edit_cmd.text if _edit_cmd else ""
+	var cmd: String = __edit_cmd.text if __edit_cmd else ""
 	if event.keycode == KEY_UP:
-		if _container_hint and _container_hint.visible:
-			if _is_hint:
-				_index += 1
+		if __container_hint and __container_hint.visible:
+			if __is_hint:
+				__index += 1
 			else:
-				_is_hint = true
-				_index = 0
-			_render_hints()
+				__is_hint = true
+				__index = 0
+			__render_hints()
 			return
 		
 		if !cmd:
 			if !GsomConsole.history.size():
 				return
-			_list_hint = GsomConsole.history.duplicate()
-			_list_hint.reverse()
-			_is_history = true
-			_index = 0
-			if _container_hint:
-				_container_hint.visible = true
-			_is_hint = true
-			_render_hints()
+			__list_hint = GsomConsole.history.duplicate()
+			__list_hint.reverse()
+			__is_history = true
+			__index = 0
+			if __container_hint:
+				__container_hint.visible = true
+			__is_hint = true
+			__render_hints()
 			return
 		return
 	
 	if event.keycode == KEY_DOWN:
-		if _container_hint and _container_hint.visible:
-			if _is_hint:
-				_index -= 1
+		if __container_hint and __container_hint.visible:
+			if __is_hint:
+				__index -= 1
 			else:
-				_is_hint = true
-				_index = 0
-			_render_hints()
+				__is_hint = true
+				__index = 0
+			__render_hints()
 			return
 		
 		return
@@ -181,66 +181,66 @@ func _handle_key(event: InputEventKey) -> void:
 
 #region Hints View
 
-func _apply_from_list() -> void:
-	var list_len: int = _list_hint.size()
+func __apply_from_list() -> void:
+	var list_len: int = __list_hint.size()
 	if !list_len:
 		return
-	var index_final: int = _get_positive_index()
-	_apply_hint(_list_hint[index_final])
+	var index_final: int = __get_positive__index()
+	__apply_hint(__list_hint[index_final])
 
 
-func _reset_hint_state() -> void:
-	if _container_hint:
-		_container_hint.visible = false
-	_is_history = false
-	_is_hint = false
-	_index = 0
-	_list_hint = []
-	_render_hints()
+func __reset_hint_state() -> void:
+	if __container_hint:
+		__container_hint.visible = false
+	__is_history = false
+	__is_hint = false
+	__index = 0
+	__list_hint = []
+	__render_hints()
 
 
-func _apply_hint(text: String) -> void:
-	if _edit_cmd:
-		_edit_cmd.text = text
-		_edit_cmd.caret_column = text.length()
-	_reset_hint_state()
+func __apply_hint(text: String) -> void:
+	if __edit_cmd:
+		__edit_cmd.text = text
+		__edit_cmd.caret_column = text.length()
+	__reset_hint_state()
 
 
-func _render_hints() -> void:
-	if !_container_hint or !_container_hint.visible:
+func __render_hints() -> void:
+	if !__container_hint or !__container_hint.visible:
 		return
 		
-	var sub_range: Array[int] = _getSublist()
-	var sublist: PackedStringArray = _list_hint.slice(sub_range[0], sub_range[1]) as PackedStringArray
+	var sub_range: Array[int] = __get_sublist()
+	var sublist: PackedStringArray = __list_hint.slice(sub_range[0], sub_range[1]) as PackedStringArray
 	var sublen: int = sublist.size()
-	var children: Array[Node] = _column_hint.get_children() if _column_hint else []
+	var children: Array[Node] = __column_hint.get_children() if __column_hint else []
 	var child_count: int = children.size()
-	var list_len: int = _list_hint.size()
-	var index_final: int = _get_positive_index()
-	var text: String = _list_hint[index_final]
+	var list_len: int = __list_hint.size()
+	var index_final: int = __get_positive__index()
+	var text: String = __list_hint[index_final]
 	
 	for i: int in range(0, child_count):
 		var idx: int = child_count - 1 - i
 		children[idx].visible = i < sublen
 		if i < sublen:
 			children[idx].text = sublist[i]
-			children[idx].flat = !_is_hint or (sub_range[0] + i != index_final)
+			children[idx].flat = !__is_hint or (sub_range[0] + i != index_final)
 
 
-# Convert `_index` to pozitive and keep within `_list_hint` bounds
-func _get_positive_index() -> int:
-	var list_len: int = _list_hint.size()
-	return ((_index % list_len) + list_len) % list_len
+# Convert `__index` to pozitive and keep within `__list_hint` bounds
+func __get_positive__index() -> int:
+	var list_len: int = __list_hint.size()
+	return ((__index % list_len) + list_len) % list_len
 
 
 # Calculate start and end indices of sublist to render
-# Returns pair as array: [start_index, end_index]
-func _getSublist() -> Array[int]:
-	var list_len: int = _list_hint.size()
+# Returns pair as array: [start__index, end__index]
+func __get_sublist() -> Array[int]:
+	var list_len: int = __list_hint.size()
 	if list_len < 5:
 		return [0, list_len]
 	
-	var index_final: int = _get_positive_index()
+	var index_final: int = __get_positive__index()
 	if index_final < 3:
 		return [0, 4]
 	

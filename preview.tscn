@@ -103,10 +103,10 @@ text = "Plaque"
 [node name="GsomConsolePanel" type="Control" parent="."]
 custom_minimum_size = Vector2(480, 320)
 anchors_preset = 0
-offset_left = 431.0
-offset_top = 369.0
-offset_right = 1168.0
-offset_bottom = 775.0
+offset_left = 56.0
+offset_top = 378.0
+offset_right = 793.0
+offset_bottom = 784.0
 script = ExtResource("3_n3s36")
 metadata/_custom_type_script = "uid://dtj85h6uxam0w"
 
