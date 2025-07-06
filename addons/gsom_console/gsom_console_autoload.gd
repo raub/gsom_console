@@ -110,8 +110,8 @@ func _ready() -> void:
 
 ## Makes a new CVAR available with default value and optional help note.
 func register_cvar(cvar_name: String, value: Variant, help_text: String = "") -> void:
-	if __cvars.has(cvar_name) or __cmds.has(cvar_name):
-		push_warning("GsomConsole.register_cvar: name '%s' already taken." % cvar_name)
+	if __cvars.has(cvar_name) or __cmds.has(cvar_name) or __aliases.has(cvar_name):
+		self.warn("CVAR name '%s' not available." % cvar_name)
 		return
 	
 	var value_type: int = typeof(value)
@@ -119,7 +119,7 @@ func register_cvar(cvar_name: String, value: Variant, help_text: String = "") ->
 			value_type != TYPE_BOOL and value_type != TYPE_INT
 			and value_type != TYPE_FLOAT and value_type != TYPE_STRING
 	):
-		push_warning("GsomConsole.register_cvar: only bool, int, float, string supported.")
+		self.warn("CVAR: only bool, int, float, string supported.")
 		return
 	
 	__cvars[cvar_name] = {
@@ -133,8 +133,8 @@ func register_cvar(cvar_name: String, value: Variant, help_text: String = "") ->
 
 ## Makes a new CMD available with an optional help note.
 func register_cmd(cmd_name: String, help_text: String = "") -> void:
-	if __cvars.has(cmd_name) or __cmds.has(cmd_name):
-		push_warning("GsomConsole.register_cmd: name '%s' already taken." % cmd_name)
+	if __cvars.has(cmd_name) or __cmds.has(cmd_name) or __aliases.has(cmd_name):
+		self.warn("CMD name '%s' not available." % cmd_name)
 		return
 	
 	__cmds[cmd_name] = {
@@ -161,7 +161,7 @@ func alias(alias_name: String, alias_text: String = "") -> void:
 ## Manually call a command, as if the call was parsed from user input.
 func call_cmd(cmd_name: String, args: PackedStringArray) -> void:
 	if !__cmds.has(cmd_name):
-		push_warning("GsomConsole.call_cmd: CMD '%s' does not exist." % cmd_name)
+		self.warn("CMD '%s' not found." % cmd_name)
 		return
 	
 	called_cmd.emit(cmd_name, args)
@@ -170,7 +170,7 @@ func call_cmd(cmd_name: String, args: PackedStringArray) -> void:
 # Assign new value to the CVAR.
 func set_cvar(cvar_name: String, value: Variant) -> void:
 	if !__cvars.has(cvar_name):
-		push_warning("GsomConsole.set_cvar: CVAR %s has not been registered." % cvar_name)
+		self.warn("CVAR '%s' not found." % cvar_name)
 		return
 	
 	var adjusted: Variant = __adjust_type(__cvars[cvar_name].value, str(value))
@@ -191,7 +191,7 @@ func set_cvar(cvar_name: String, value: Variant) -> void:
 ## Inspect the current CVAR value.
 func get_cvar(cvar_name: String) -> Variant:
 	if !__cvars.has(cvar_name):
-		push_warning("GsomConsole.get_cvar: CVAR %s has not been registered." % cvar_name)
+		self.warn("CVAR '%s' not found." % cvar_name)
 		return 0
 	
 	return __cvars[cvar_name].value
@@ -440,16 +440,12 @@ func __cmd_map(args: PackedStringArray) -> void:
 		map_name += ".tscn"
 	if !ResourceLoader.exists(map_name):
 		error(
-			"Scene '[b]%s[/b]' doesn't exist." % [
-				__color(COLOR_VALUE, args[0]),
-			]
+			"Scene '[b]%s[/b]' doesn't exist." % __color(COLOR_VALUE, args[0]),
 		)
 		return
 	
 	self.log(
-		"Changing scene to '[b]%s[/b]'..." % [
-			__color(COLOR_VALUE, map_name),
-		]
+		"Changing scene to '[b]%s[/b]'..." % __color(COLOR_VALUE, map_name),
 	)
 	
 	get_tree().change_scene_to_file(map_name)
@@ -465,9 +461,7 @@ func __cmd_echo(args: PackedStringArray) -> void:
 func __cmd_exec(args: PackedStringArray) -> void:
 	if !args.size():
 		self.log(
-			"Syntax: 'exec [b]%s[/b]'." % [
-				__color(COLOR_VALUE, "file[%s]" % EXEC_EXT),
-			]
+			"Syntax: 'exec [b]%s[/b]'." % __color(COLOR_VALUE, "file[%s]" % EXEC_EXT),
 		)
 		var result: PackedStringArray = []
 		__append_exec_path_list(result)
@@ -516,14 +510,21 @@ func __cmd_help(args: PackedStringArray) -> void:
 		for arg: String in args:
 			var color: String = __get_help_color()
 			if __cmds.has(arg):
-				result.append(__color(color, "[b]%s[/b] - %s" % [arg, __cmds[arg].help]))
-				result.append("\n")
+				result.append(
+					__color(color, "[b]%s[/b] - %s\n" % [arg, __cmds[arg].help]),
+				)
 			elif __cvars.has(arg):
-				result.append(__color(color, "[b]%s[/b] - %s" % [arg, __cvars[arg].help]))
-				result.append("\n")
+				result.append(
+					__color(color, "[b]%s[/b] - %s\n" % [arg, __cvars[arg].help]),
+				)
+			elif __aliases.has(arg):
+				result.append(
+					__color(color, "[b]%s[/b] - %s\n" % [arg, __aliases[arg]]),
+				)
 			else:
-				result.append(__color(COLOR_ERROR, "[b]%s[/b] - No such command/variable." % arg))
-				result.append("\n")
+				result.append(
+					__color(COLOR_ERROR, "[b]%s[/b] - No such command/variable.\n" % arg)
+				)
 		
 		self.log("".join(PackedStringArray(result)))
 		return
@@ -545,8 +546,7 @@ func __append_cvar_list(dest: PackedStringArray) -> void:
 	
 	for key: String in __cvars:
 		var color: String = __get_help_color()
-		dest.append(__color(color, "[b]%s[/b] - %s" % [key, __cvars[key].help]))
-		dest.append("\n")
+		dest.append(__color(color, "\t[b]%s[/b] - %s\n" % [key, __cvars[key].help]))
 
 
 # Mutates `dest` by adding CMDs info
@@ -559,8 +559,7 @@ func __append_cmd_list(dest: PackedStringArray) -> void:
 	
 	for key: String in __cmds:
 		var color: String = __get_help_color()
-		dest.append(__color(color, "[b]%s[/b] - %s" % [key, __cmds[key].help]))
-		dest.append("\n")
+		dest.append(__color(color, "\t[b]%s[/b] - %s\n" % [key, __cmds[key].help]))
 
 
 # Mutates `dest` by adding ALIASes info
@@ -573,8 +572,7 @@ func __append_alias_list(dest: PackedStringArray) -> void:
 	
 	for key: String in __aliases:
 		var color: String = __get_help_color()
-		dest.append(__color(color, "[b]%s[/b] - %s" % [key, __aliases[key]]))
-		dest.append("\n")
+		dest.append(__color(color, "\t[b]%s[/b] - %s\n" % [key, __aliases[key]]))
 
 
 # Mutates `dest` by adding exec paths info
