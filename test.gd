@@ -12,6 +12,7 @@ func _ready() -> void:
 	__test_console_echo()
 	__test_console_exec()
 	__test_console_wait()
+	__test_text_matcher()
 
 #region Test Helpers
 
@@ -24,7 +25,7 @@ func __describe(test_name: String) -> Dictionary:
 
 func __push_error(desc: Dictionary, text: Array[String]) -> void:
 	desc.__has_error = true
-	desc.__verbose_text += "\t❌ %s\n\n" % "\n\t\t".join(text)
+	desc.__verbose_text += "\t❌ %s\n\n" % "\n\t\t↳ ".join(text)
 
 func __push_ok(desc: Dictionary, text: Array[String]) -> void:
 	desc.__verbose_text += "\t✅ %s\n\n" % "\n\t\t↳ ".join(text)
@@ -39,7 +40,7 @@ func __flush(desc: Dictionary) -> void:
 
 #region AST Parser
 
-var valid_ast_inputs: Dictionary[String, Array] = {
+var __valid_ast_inputs: Dictionary[String, Array] = {
 	# Simple 3-token command
 	"say hello world": [["say", "hello", "world"]],
 	# Quoted argument with space
@@ -74,7 +75,7 @@ var valid_ast_inputs: Dictionary[String, Array] = {
 	"  test leading_space": [["test", "leading_space"]],
 }
 
-var invalid_ast_inputs: Dictionary[String, String] = {
+var __invalid_ast_inputs: Dictionary[String, String] = {
 	# Line starts with quote, not command name
 	"\"unquoted start": "Command must start with a letter or underscore.",
 	# Starts with semicolon, no command
@@ -104,18 +105,18 @@ var invalid_ast_inputs: Dictionary[String, String] = {
 func __test_ast_valid() -> void:
 	var desc: Dictionary = __describe("AstParser Valid Input")
 	
-	for input in valid_ast_inputs:
+	for input in __valid_ast_inputs:
 		var parser := GsomConsole.AstParser.new(input)
 		if parser.error:
 			__push_error(desc, [
 				"AstParser Valid Syntax: `%s`" % input,
 				"%s" % parser.error,
 			])
-		elif str(parser.ast) != str(valid_ast_inputs[input]):
+		elif str(parser.ast) != str(__valid_ast_inputs[input]):
 			__push_error(desc, [
 				"AstParser Mismatch AST: `%s`" % input,
 				"%s (actual)" % str(parser.ast),
-				"%s (expected)" % valid_ast_inputs[input],
+				"%s (expected)" % __valid_ast_inputs[input],
 			])
 		else:
 			__push_ok(desc, [
@@ -129,18 +130,18 @@ func __test_ast_valid() -> void:
 func __test_ast_invalid() -> void:
 	var desc: Dictionary = __describe("AstParser Invalid Input")
 	
-	for input in invalid_ast_inputs:
+	for input in __invalid_ast_inputs:
 		var parser := GsomConsole.AstParser.new(input)
 		if parser.error == "":
 			__push_error(desc, [
 				"AstParser Invalid Syntax: `%s`" % input,
 				"Shouldn't be parsed, but it is: %s" % str(parser.ast),
 			])
-		elif parser.error != invalid_ast_inputs[input]:
+		elif parser.error != __invalid_ast_inputs[input]:
 			__push_error(desc, [
 				"AstParser Mismatch Error: `%s`" % input,
 				"%s (actual)" % parser.error,
-				"%s (expected)" % invalid_ast_inputs[input],
+				"%s (expected)" % __invalid_ast_inputs[input],
 			])
 		else:
 			__push_ok(desc, [
@@ -297,4 +298,75 @@ func __test_console_wait() -> void:
 	
 	__flush(desc)
 	
+#endregion
+
+#region Text Matcher
+
+var __matcher_cases: Array[Dictionary] = [
+	{
+		"text": "test",
+		"available": ["contest", "test1", "something"],
+		"expected": ["test1", "contest"],
+	},
+	{
+		"text": "mesa",
+		"available": ["Mesa", "Message", "Laser", "Admin", "Gordon"],
+		"expected": ["Mesa", "Message"],
+	},
+	{
+		"text": "hl",
+		"available": ["half", "life", "halflife", "hello"],
+		"expected": ["half", "hello", "halflife"],
+	},
+	{
+		"text": "admin",
+		"available": ["administrator", "admin1", "domain", "adnin"],
+		"expected": ["admin1", "administrator", "adnin"],
+	},
+	{
+		"text": "combine",
+		"available": ["Combinator", "combine", "combinee", "combinez", "zombie"],
+		"expected": ["combine", "combinee", "combinez"],
+	},
+	{
+		"text": "gordon",
+		"available": ["Gordon", "Gordan", "Gord", "Goose"],
+		"expected": ["Gordon", "Gordan", "Gord"],
+	},
+	{
+		"text": "xyz",
+		"available": ["alpha", "beta", "gamma"],
+		"expected": [],
+	},
+	{
+		"text": "sentry",
+		"available": ["sentinel", "centry", "sentrybot", "entry"],
+		"expected": ["sentrybot"],
+	},
+	{
+		"text": "turret",
+		"available": ["turret", "turretgun", "tarret", "truck"],
+		"expected": ["turret", "turretgun", "tarret"],
+	},
+]
+
+func __test_text_matcher() -> void:
+	var desc: Dictionary = __describe("Text Matcher")
+	
+	for matcher_case: Dictionary in __matcher_cases:
+		var matched := GsomConsole.TextMatcher.new(matcher_case.text, matcher_case.available)
+		if str(matched.matched) != str(matcher_case.expected):
+			__push_error(desc, [
+				"Text Match: `%s` %s" % [matcher_case.text, matcher_case.available],
+				"%s (actual)" % str(matched.matched),
+				"%s (expected)" % str(matcher_case.expected),
+			])
+		else:
+			__push_ok(desc, [
+				"Text Match: `%s` %s" % [matcher_case.text, matcher_case.available],
+				"Matched: %s" % str(matched.matched),
+			])
+	
+	__flush(desc)
+
 #endregion

@@ -19,6 +19,10 @@ signal toggled(is_visible: bool)
 ## to the signal. The whole log text is available as `log_text` prop.
 signal logged(rich_text: String)
 
+const CommonUi := preload('./tools/common_ui.gd')
+const AstParser := preload('./tools/ast_parser.gd')
+const TextMatcher := preload('./tools/text_matcher.gd')
+const Interceptor := preload('./tools/interceptor.gd')
 
 const __TYPE_NAMES: Dictionary = {
 	TYPE_BOOL: "bool",
@@ -41,6 +45,7 @@ var CMD_SEPARATOR: String = ";"
 var CMD_WAIT: String = "wait"
 var EXEC_EXT: String = ".cfg"
 
+var interceptor: Interceptor = Interceptor.new()
 
 var __log_text: String = ""
 ## The whole log text content. This may be also used to reset the log.
@@ -79,38 +84,17 @@ var __history: PackedStringArray = []
 		return __history
 
 
-const CommonUi := preload('./tools/common_ui.gd')
-const AstParser := preload('./tools/ast_parser.gd')
-
 var __cvars: Dictionary[String, Dictionary] = {}
 var __cmds: Dictionary[String, Dictionary] = {}
-var __aliases: Dictionary[String, String] = {}
 var __next: Array[Array] = []
 var __help_color_idx: int = 0
 
 
-func _ready() -> void:
-	register_cmd("help", "Display available commands and variables.")
-	register_cmd("quit", "Close the application, exit to desktop.")
-	register_cmd("mainscene", "Reload the main scene (as in project settings).")
-	register_cmd("map", "Switch to a scene by path, or show path to the current one.")
-	register_cmd("alias", "Create a named shortcut for any input text.")
-	register_cmd("echo", "Print back any input.")
-	register_cmd("exec", "Parse and execute commands line by line from a file.")
-	register_cmd("wait", "A special command to postpone the execution by 1 tick.")
-	
-	called_cmd.connect(__handle_builtins)
-	
-	self.log(
-		"Type '[b]%s[/b]' to view existing commands and variables." % [
-			__color(COLOR_VALUE, "help"),
-		]
-	)
-
+#region CVARs
 
 ## Makes a new CVAR available with default value and optional help note.
 func register_cvar(cvar_name: String, value: Variant, help_text: String = "") -> void:
-	if __cvars.has(cvar_name) or __cmds.has(cvar_name) or __aliases.has(cvar_name):
+	if __cvars.has(cvar_name) or __cmds.has(cvar_name) or interceptor.has_key(cvar_name):
 		self.warn("CVAR name '%s' not available." % cvar_name)
 		return
 	
@@ -131,40 +115,19 @@ func register_cvar(cvar_name: String, value: Variant, help_text: String = "") ->
 	set_cvar(cvar_name, value)
 
 
-## Makes a new CMD available with an optional help note.
-func register_cmd(cmd_name: String, help_text: String = "") -> void:
-	if __cvars.has(cmd_name) or __cmds.has(cmd_name) or __aliases.has(cmd_name):
-		self.warn("CMD name '%s' not available." % cmd_name)
-		return
+func __adjust_type(old_value: Variant, new_value: String) -> Variant:
+	var value_type = typeof(old_value)
+	if value_type == TYPE_BOOL:
+		return new_value == "true" or new_value == "1"
+	elif value_type == TYPE_INT:
+		return int(new_value)
+	elif value_type == TYPE_FLOAT:
+		return float(new_value)
+	elif value_type == TYPE_STRING:
+		return new_value
 	
-	__cmds[cmd_name] = {
-		"help": help_text if !help_text.is_empty() else "[No description].",
-	}
-
-
-## Add or remove an alias.
-## CVARs and CMDs take precedence - can't override with alias.
-## Empty `alias_text` will remove the existing alias.
-func alias(alias_name: String, alias_text: String = "") -> void:
-	alias_name = alias_name.strip_edges().to_lower()
-	
-	if __cvars.has(alias_name) or __cmds.has(alias_name):
-		self.warn("Alias name '%s' not available." % alias_name)
-		return
-	
-	if alias_text:
-		__aliases[alias_name] = alias_text
-	else:
-		__aliases.erase(alias_name)
-
-
-## Manually call a command, as if the call was parsed from user input.
-func call_cmd(cmd_name: String, args: PackedStringArray) -> void:
-	if !__cmds.has(cmd_name):
-		self.warn("CMD '%s' not found." % cmd_name)
-		return
-	
-	called_cmd.emit(cmd_name, args)
+	push_warning("GsomConsole.set_cvar: only bool, int, float, string supported.")
+	return old_value
 
 
 # Assign new value to the CVAR.
@@ -197,6 +160,15 @@ func get_cvar(cvar_name: String) -> Variant:
 	return __cvars[cvar_name].value
 
 
+## Fetch CVAR help text.
+func get_cvar_help(cvar_name: String) -> String:
+	if !__cvars.has(cvar_name):
+		self.warn("CVAR '%s' not found." % cvar_name)
+		return ""
+	
+	return __cvars[cvar_name].help
+
+
 ## List all CVAR names.
 func list_cvars() -> Array[String]:
 	return __cvars.keys()
@@ -206,51 +178,78 @@ func list_cvars() -> Array[String]:
 func has_cvar(cvar_name: String) -> bool:
 	return __cvars.has(cvar_name)
 
+#endregion
+
+#region CMDs
+
+## Makes a new CMD available with an optional help note.
+func register_cmd(cmd_name: String, help_text: String = "") -> void:
+	if __cvars.has(cmd_name) or __cmds.has(cmd_name) or interceptor.has_key(cmd_name):
+		self.warn("CMD name '%s' not available." % cmd_name)
+		return
+	
+	__cmds[cmd_name] = {
+		"help": help_text if !help_text.is_empty() else "[No description].",
+	}
+
+
+## Manually call a command, as if the call was parsed from user input.
+func call_cmd(cmd_name: String, args: PackedStringArray) -> void:
+	if !__cmds.has(cmd_name):
+		self.warn("CMD '%s' not found." % cmd_name)
+		return
+	
+	called_cmd.emit(cmd_name, args)
+
+
+## Fetch CMD help text.
+func get_cmd_help(cmd_name: String) -> String:
+	if !__cmds.has(cmd_name):
+		self.warn("CMD '%s' not found." % cmd_name)
+		return ""
+	
+	return __cmds[cmd_name].help
+
+
+## List all CMD names.
+func list_cmds() -> Array[String]:
+	return __cmds.keys()
+
 
 ## Check if there is a CMD with given name
 func has_cmd(cmd_name: String) -> bool:
 	return __cmds.has(cmd_name)
 
-
-## Check if there is an ALIAS with given name
-func has_alias(alias_name: String) -> bool:
-	return __aliases.has(alias_name)
+#endregion
 
 
-## Get a list of CVAR and CMD names that start with the given `text`.
+## Get a list of Alias, CVAR, and CMD names that start with the given `text`.
 func get_matches(text: String) -> PackedStringArray:
 	var matches: PackedStringArray = []
-	
 	if !text:
 		return matches
 	
-	for k: String in __cvars:
-		if k.begins_with(text):
-			matches.append(k)
+	var common_list = interceptor.get_keys()
+	common_list.append_array(__cvars.keys())
+	common_list.append_array(__cmds.keys())
 	
-	for k: String in __cmds:
-		if k.begins_with(text):
-			matches.append(k)
+	var matcher = TextMatcher.new(text, common_list)
 	
-	return matches
+	return matcher.matched
 
 
 ## Set `is_visible` to `false` if it was `true`. Only emits `on_toggle` if indeed changed.
 func hide() -> void:
-	if !__is_visible:
-		return
-	
-	__is_visible = false
-	toggled.emit(false)
+	if __is_visible:
+		__is_visible = false
+		toggled.emit(false)
 
 
 ## Set `is_visible` to `true` if it was `false`. Only emits `on_toggle` if indeed changed.
 func show() -> void:
-	if __is_visible:
-		return
-	
-	__is_visible = true
-	toggled.emit(true)
+	if !__is_visible:
+		__is_visible = true
+		toggled.emit(true)
 
 
 ## Changes the `is_visible` value to the opposite and emits `on_toggle`.
@@ -258,12 +257,9 @@ func toggle() -> void:
 	__is_visible = !__is_visible
 	toggled.emit(__is_visible)
 
+#region Submit
 
 ## Submit user input for parsing.
-## cmd arg1 arg2
-## cmd1 arg1; cmd2
-## cmd1; wait; cmd2
-## cmd1 "text; text"; cmd2
 func submit(expression: String, track__history: bool = true) -> void:
 	var parsed: AstParser = AstParser.new(expression)
 	if parsed.error:
@@ -276,6 +272,14 @@ func submit(expression: String, track__history: bool = true) -> void:
 	__submit_ast(parsed.ast)
 
 
+func __history_push(expression: String) -> void:
+	var history_len: int = __history.size()
+	if history_len and __history[history_len - 1] == expression:
+		return
+	
+	__history.append(expression)
+
+
 func __submit_ast(ast: Array[PackedStringArray]) -> void:
 	for i: int in ast.size():
 		var part: PackedStringArray = ast[i]
@@ -286,37 +290,15 @@ func __submit_ast(ast: Array[PackedStringArray]) -> void:
 		__submit_part(part)
 
 
-func __try_create_alias(ast_part: PackedStringArray) -> bool:
-	if ast_part[0] != "alias":
-		return false
-	
-	if ast_part.size() == 1:
-		var result: PackedStringArray = []
-		__append_alias_list(result)
-		self.log("".join(result)) # using `self` to avoid name collision
-		return true
-	
-	if ast_part.size() == 2:
-		alias(ast_part[1])
-		return true
-	
-	alias(ast_part[1], " ".join(ast_part.slice(2)))
-	return true
-
-
-func __submit_part(ast_part: PackedStringArray) -> bool:
-	if __try_create_alias(ast_part):
-		return false
+func __submit_part(ast_part: PackedStringArray) -> void:
+	if interceptor.intercept(ast_part):
+		return
 	
 	var g0: String = ast_part[0].to_lower()
 	
-	if has_alias(g0):
-		submit(__aliases[g0], false)
-		return false
-	
 	if has_cmd(g0):
 		call_cmd(g0, ast_part.slice(1))
-		return false
+		return
 	
 	if (ast_part.size() == 1 or ast_part.size() == 2) and has_cvar(g0):
 		if ast_part.size() == 2:
@@ -327,16 +309,16 @@ func __submit_part(ast_part: PackedStringArray) -> bool:
 		var type_value: int = typeof(result)
 		var type_name: String = __TYPE_NAMES[type_value]
 		self.log("%s%s%s %s" % [
-				__color(COLOR_PRIMARY, g0),
-				__color(COLOR_SECONDARY, ":"),
-				__color(COLOR_TYPE, type_name),
-				__color(COLOR_VALUE, str(result)),
+			__color(COLOR_PRIMARY, g0),
+			__color(COLOR_SECONDARY, ":"),
+			__color(COLOR_TYPE, type_name),
+			__color(COLOR_VALUE, str(result)),
 		])
-		return false
+		return
 	
 	error("Unrecognized command `%s`." % [" ".join(ast_part)])
-	return false
 
+#endregion
 
 ## Appends `msg` to `log_text` and emits `on_log`.
 func log(msg: String) -> void:
@@ -372,7 +354,7 @@ func tick() -> void:
 	if !__next.size():
 		return
 	
-	var _prev = __next
+	var _prev: Array[Array] = __next
 	__next = []
 	
 	for ast: Array[PackedStringArray] in _prev:
@@ -384,213 +366,5 @@ func _process(_delta: float) -> void:
 		tick()
 
 
-# "wait" and "alias" are non-commands, handled separately in `submit`
-func __handle_builtins(cmd_name: String, args: PackedStringArray) -> void:
-	if cmd_name == "echo":
-		__cmd_echo(args)
-	if cmd_name == "exec":
-		__cmd_exec(args)
-	if cmd_name == "help":
-		__cmd_help(args)
-	elif cmd_name == "quit":
-		get_tree().quit()
-	elif cmd_name == "map":
-		__cmd_map(args)
-	elif cmd_name == "mainscene":
-		__cmd_map([ProjectSettings.get_setting("application/run/main_scene")])
-
-
 func __color(color: String, text: String) -> String:
 	return "[color=%s]%s[/color]" % [color, text]
-
-
-func __adjust_type(old_value: Variant, new_value: String) -> Variant:
-	var value_type = typeof(old_value)
-	if value_type == TYPE_BOOL:
-		return new_value == "true" or new_value == "1"
-	elif value_type == TYPE_INT:
-		return int(new_value)
-	elif value_type == TYPE_FLOAT:
-		return float(new_value)
-	elif value_type == TYPE_STRING:
-		return new_value
-	
-	push_warning("GsomConsole.set_cvar: only bool, int, float, string supported.")
-	return old_value
-
-
-func __get_help_color() -> String:
-	var color: String = COLORS_HELP[__help_color_idx % COLORS_HELP.size()]
-	__help_color_idx = __help_color_idx + 1
-	return color
-
-
-func __cmd_map(args: PackedStringArray) -> void:
-	if !args.size():
-		self.log(
-			"The current scene is '[b]%s[/b]'." % [
-				__color(COLOR_VALUE, get_tree().current_scene.scene_file_path),
-			]
-		)
-		return
-	
-	# `map [name]` syntax below
-	var map_name: String = args[0]
-	if !ResourceLoader.exists(map_name):
-		map_name += ".tscn"
-	if !ResourceLoader.exists(map_name):
-		error(
-			"Scene '[b]%s[/b]' doesn't exist." % __color(COLOR_VALUE, args[0]),
-		)
-		return
-	
-	self.log(
-		"Changing scene to '[b]%s[/b]'..." % __color(COLOR_VALUE, map_name),
-	)
-	
-	get_tree().change_scene_to_file(map_name)
-	GsomConsole.hide()
-
-
-func __cmd_echo(args: PackedStringArray) -> void:
-	if !args.size():
-		return
-	self.log(" ".join(args))
-
-
-func __cmd_exec(args: PackedStringArray) -> void:
-	if !args.size():
-		self.log(
-			"Syntax: 'exec [b]%s[/b]'." % __color(COLOR_VALUE, "file[%s]" % EXEC_EXT),
-		)
-		var result: PackedStringArray = []
-		__append_exec_path_list(result)
-		self.log("".join(result)) # using `self` to avoid name collision
-		return
-	
-	var exec_name: String = args[0]
-	__search_and_exec(exec_name)
-
-
-## Function receives a console script name - with or without extension (`EXEC_EXT`).
-## Tries to locate the file in `exec_paths`.
-## Each directory is tried first without the file extension, then with extension.
-## As soon as the first file match found, the file is read and executed, the search stops.
-## The file execution is performed by splitting it line-by line.
-## Then non-empty (and non-whitespace) lines are fed to the `submit(text)` method.
-func __search_and_exec(exec_name: String) -> void:
-	var file: FileAccess = null
-	
-	for dir_path in exec_paths:
-		file = FileAccess.open(dir_path + exec_name, FileAccess.READ)
-		if file:
-			break
-		file = FileAccess.open(dir_path + exec_name + EXEC_EXT, FileAccess.READ)
-		if file:
-			break
-	
-	if !file:
-		error("Script '[b]%s[/b]' doesn't exist." % [__color(COLOR_VALUE, exec_name)])
-		return
-
-	self.log("Executing script '[b]%s[/b]'..." % [__color(COLOR_VALUE, exec_name)])
-	while !file.eof_reached():
-		var line: String = file.get_line().strip_edges()
-		if !line.is_empty():
-			submit(line, false)
-	file.close()
-
-
-func __cmd_help(args: PackedStringArray) -> void:
-	var i: int = 0
-	var result: PackedStringArray = []
-	
-	# `help [name1, name2, ...]` syntax
-	if args.size():
-		for arg: String in args:
-			var color: String = __get_help_color()
-			if __cmds.has(arg):
-				result.append(
-					__color(color, "[b]%s[/b] - %s\n" % [arg, __cmds[arg].help]),
-				)
-			elif __cvars.has(arg):
-				result.append(
-					__color(color, "[b]%s[/b] - %s\n" % [arg, __cvars[arg].help]),
-				)
-			elif __aliases.has(arg):
-				result.append(
-					__color(color, "[b]%s[/b] - %s\n" % [arg, __aliases[arg]]),
-				)
-			else:
-				result.append(
-					__color(COLOR_ERROR, "[b]%s[/b] - No such command/variable.\n" % arg)
-				)
-		
-		self.log("".join(PackedStringArray(result)))
-		return
-	
-	__append_cvar_list(result)
-	__append_cmd_list(result)
-	__append_alias_list(result)
-	
-	self.log("".join(result)) # using `self` to avoid name collision
-
-
-# Mutates `dest` by adding CMDs info
-func __append_cvar_list(dest: PackedStringArray) -> void:
-	if !__cvars.size():
-		dest.append("There are no variables, yet.\n")
-		return
-	
-	dest.append("Available variables:\n")
-	
-	for key: String in __cvars:
-		var color: String = __get_help_color()
-		dest.append(__color(color, "\t[b]%s[/b] - %s\n" % [key, __cvars[key].help]))
-
-
-# Mutates `dest` by adding CMDs info
-func __append_cmd_list(dest: PackedStringArray) -> void:
-	if !__cmds.size():
-		dest.append("There are no commands, yet.\n")
-		return
-	
-	dest.append("Available commands:\n")
-	
-	for key: String in __cmds:
-		var color: String = __get_help_color()
-		dest.append(__color(color, "\t[b]%s[/b] - %s\n" % [key, __cmds[key].help]))
-
-
-# Mutates `dest` by adding ALIASes info
-func __append_alias_list(dest: PackedStringArray) -> void:
-	if !__aliases.size():
-		dest.append("There are no aliases, yet.\n")
-		return
-	
-	dest.append("Available aliases:\n")
-	
-	for key: String in __aliases:
-		var color: String = __get_help_color()
-		dest.append(__color(color, "\t[b]%s[/b] - %s\n" % [key, __aliases[key]]))
-
-
-# Mutates `dest` by adding exec paths info
-func __append_exec_path_list(dest: PackedStringArray) -> void:
-	if !exec_paths.size():
-		dest.append("There are no exec paths, yet.\n")
-		return
-	
-	dest.append("Registered exec paths:\n")
-	
-	for path: String in exec_paths:
-		var color: String = __get_help_color()
-		dest.append(__color(color, "\t%s\n" % path))
-
-
-func __history_push(expression: String) -> void:
-	var history_len: int = __history.size()
-	if history_len and __history[history_len - 1] == expression:
-		return
-	
-	__history.append(expression)

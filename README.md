@@ -190,5 +190,3 @@ The development focus of this plugin is following:
 * Add components: log overlay, bottom-left console (TES Oblivion/Skyrim).
 * Expand component options: colors, verbosity/log levels - maybe also
     add cvars that control those on runtime.
-* Improve autocompletion/matching and hints.
-* Think about some generic commands/cvars that are relevant for ALL projects.
