@@ -190,3 +190,57 @@ The development focus of this plugin is following:
 * Add components: log overlay, bottom-left console (TES Oblivion/Skyrim).
 * Expand component options: colors, verbosity/log levels - maybe also
     add cvars that control those on runtime.
+
+
+## Console Feature Checklist
+
+**Command Definition System**
+
+- [x] Register variables from code
+- [x] Declare new commands from code
+- [x] Override/intercept commands
+- [x] Command aliases via `alias`
+
+**Command Input and Execution**
+
+- [x] Multiple commands per line using semicolon `;`
+- [x] Command postponement using `wait`
+- [x] Command history recall
+- [x] Command auto-completion
+- [x] Print messages to console with `echo`
+
+**Variables and CVars**
+
+- [x] Set variable with implicit assignment
+- [x] Read variable value by typing its name
+- [x] Set variable with `set`
+- [x] Toggle boolean variables with `toggle`
+- [x] Protect read-only variables
+
+**Script Files and Execution**
+
+- [x] Execute script files via `exec`
+- [x] Comments support - `//` and `#`
+- [x] Support for line continuation - `\`
+
+**Output and Logging**
+
+- [x] Colored or formatted output (BBCode)
+- [x] Console output for executed commands
+- [x] Save specific variables to configuration files
+- [x] Save all CVARs, aliases, etc. to files
+
+**Input and Binding Integration**
+
+- [ ] Keybinding support via `bind`, `unbind`, `unbindall`
+- [ ] Modifier-aware input - `+command` / `-command`
+- [ ] Multiple binds per key via aliases
+
+**Advanced Usability**
+
+- [x] Console UI
+- [x] Command/variable help text
+- [x] Print list of all registered symbols
+- [x] Search/filter commands - `find`
+- [x] Conditional logic
+- [x] Increment/decrement variables

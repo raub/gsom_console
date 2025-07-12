@@ -89,12 +89,11 @@ var __cmds: Dictionary[String, Dictionary] = {}
 var __next: Array[Array] = []
 var __help_color_idx: int = 0
 
-
 #region CVARs
 
 ## Makes a new CVAR available with default value and optional help note.
 func register_cvar(cvar_name: String, value: Variant, help_text: String = "") -> void:
-	if __cvars.has(cvar_name) or __cmds.has(cvar_name) or interceptor.has_key(cvar_name):
+	if has_key(cvar_name):
 		self.warn("CVAR name '%s' not available." % cvar_name)
 		return
 	
@@ -110,30 +109,37 @@ func register_cvar(cvar_name: String, value: Variant, help_text: String = "") ->
 		"value": value,
 		"help": help_text if !help_text.is_empty() else "[No description].",
 		"hint": "",
+		"is_frozen": false,
 	}
 	
 	set_cvar(cvar_name, value)
 
 
+func convert_value(value_type: int, new_value: String) -> Variant:
+	match value_type:
+		TYPE_BOOL: return new_value == "true" or new_value == "1"
+		TYPE_INT: return int(new_value)
+		TYPE_FLOAT: return float(new_value)
+		# String and all else
+		_: return str(new_value)
+
 func __adjust_type(old_value: Variant, new_value: String) -> Variant:
 	var value_type = typeof(old_value)
-	if value_type == TYPE_BOOL:
-		return new_value == "true" or new_value == "1"
-	elif value_type == TYPE_INT:
-		return int(new_value)
-	elif value_type == TYPE_FLOAT:
-		return float(new_value)
-	elif value_type == TYPE_STRING:
-		return new_value
-	
-	push_warning("GsomConsole.set_cvar: only bool, int, float, string supported.")
-	return old_value
+	return convert_value(value_type, new_value)
 
+func show_cvar(cvar_name: String) -> void:
+	if !__cvars.has(cvar_name):
+		self.warn("CVAR '%s' not found." % cvar_name)
+		return
+	self.log(__cvars[cvar_name].hint)
 
 # Assign new value to the CVAR.
 func set_cvar(cvar_name: String, value: Variant) -> void:
 	if !__cvars.has(cvar_name):
 		self.warn("CVAR '%s' not found." % cvar_name)
+		return
+	if __cvars[cvar_name].is_frozen:
+		self.warn("CVAR '%s' is read-only." % cvar_name)
 		return
 	
 	var adjusted: Variant = __adjust_type(__cvars[cvar_name].value, str(value))
@@ -141,12 +147,23 @@ func set_cvar(cvar_name: String, value: Variant) -> void:
 	__cvars[cvar_name].value = adjusted
 	var type_value: int = typeof(adjusted)
 	var type_name: String = __TYPE_NAMES[type_value]
-	var hint: String = "%s %s %s" % [
+	var hint: String = "%s%s%s %s" % [
+		__color(COLOR_PRIMARY, cvar_name),
 		__color(COLOR_SECONDARY, ":"),
 		__color(COLOR_TYPE, type_name),
 		__color(COLOR_VALUE, str(adjusted)),
 	]
 	__cvars[cvar_name].hint = hint
+	
+	changed_cvar.emit(cvar_name)
+
+# Assign new value to the CVAR.
+func freeze_cvar(cvar_name: String, is_frozen: bool = true) -> void:
+	if !__cvars.has(cvar_name):
+		self.warn("CVAR '%s' not found." % cvar_name)
+		return
+	
+	__cvars[cvar_name].is_frozen = is_frozen
 	
 	changed_cvar.emit(cvar_name)
 
@@ -184,7 +201,7 @@ func has_cvar(cvar_name: String) -> bool:
 
 ## Makes a new CMD available with an optional help note.
 func register_cmd(cmd_name: String, help_text: String = "") -> void:
-	if __cvars.has(cmd_name) or __cmds.has(cmd_name) or interceptor.has_key(cmd_name):
+	if has_key(cmd_name):
 		self.warn("CMD name '%s' not available." % cmd_name)
 		return
 	
@@ -221,6 +238,11 @@ func has_cmd(cmd_name: String) -> bool:
 	return __cmds.has(cmd_name)
 
 #endregion
+
+
+## Check if a CMD/CVAR name is already taken
+func has_key(key: String) -> bool:
+	return __cvars.has(key) or __cmds.has(key) or interceptor.has_key(key)
 
 
 ## Get a list of Alias, CVAR, and CMD names that start with the given `text`.
@@ -267,12 +289,12 @@ func submit(expression: String, track__history: bool = true) -> void:
 		return
 	
 	if track__history:
-		__history_push(expression.strip_edges())
+		push_history(expression.strip_edges())
 	
 	__submit_ast(parsed.ast)
 
 
-func __history_push(expression: String) -> void:
+func push_history(expression: String) -> void:
 	var history_len: int = __history.size()
 	if history_len and __history[history_len - 1] == expression:
 		return
@@ -308,12 +330,7 @@ func __submit_part(ast_part: PackedStringArray) -> void:
 		var result: Variant = get_cvar(g0)
 		var type_value: int = typeof(result)
 		var type_name: String = __TYPE_NAMES[type_value]
-		self.log("%s%s%s %s" % [
-			__color(COLOR_PRIMARY, g0),
-			__color(COLOR_SECONDARY, ":"),
-			__color(COLOR_TYPE, type_name),
-			__color(COLOR_VALUE, str(result)),
-		])
+		show_cvar(g0)
 		return
 	
 	error("Unrecognized command `%s`." % [" ".join(ast_part)])

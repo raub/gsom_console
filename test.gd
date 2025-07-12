@@ -163,8 +163,19 @@ func __test_console_help() -> void:
 		__push_ok(desc, ["`help` variables initially empty"])
 	else:
 		__push_error(desc, ["`help` variables should have started empty"])
+		
+	if GsomConsole.log_text.contains("There are no commands"):
+		__push_ok(desc, ["`help` commands initially empty"])
+	else:
+		__push_error(desc, ["`help` commands should have started empty"])
 	
-	GsomConsole.register_cvar("test", 1, "test variable description text")
+	if GsomConsole.log_text.contains("Available built-ins"):
+		__push_ok(desc, ["`help` reports built-ins"])
+	else:
+		__push_error(desc, ["`help` missing built-ins"])
+		
+	GsomConsole.register_cvar("test_cvar", 1, "test variable description text")
+	GsomConsole.register_cmd("test_cmd", "test command description text")
 	GsomConsole.submit("help")
 	if GsomConsole.log_text.contains("test variable description text"):
 		__push_ok(desc, ["`help` reports variables"])
@@ -172,6 +183,11 @@ func __test_console_help() -> void:
 		__push_error(desc, ["`help` missing variables"])
 	
 	if GsomConsole.log_text.contains("Available commands"):
+		__push_ok(desc, ["`help` reports command list"])
+	else:
+		__push_error(desc, ["`help` missing command list"])
+	
+	if GsomConsole.log_text.contains("test command description text"):
 		__push_ok(desc, ["`help` reports commands"])
 	else:
 		__push_error(desc, ["`help` missing commands"])
@@ -194,7 +210,7 @@ func __test_console_alias() -> void:
 	var desc: Dictionary = __describe("Console Alias")
 	
 	GsomConsole.submit("alias say_alias1 say test")
-	if GsomConsole.has_alias("say_alias1"):
+	if GsomConsole.has_key("say_alias1"):
 		__push_ok(desc, ["`say_alias1` registered"])
 	else:
 		__push_error(desc, ["`say_alias1` missing"])
@@ -213,7 +229,7 @@ func __test_console_alias() -> void:
 		__push_error(desc, ["`test_for_alias` should not have taken a CVAR name"])
 	
 	GsomConsole.submit("alias say_alias1")
-	if !GsomConsole.has_alias("say_alias1"):
+	if !GsomConsole.has_key("say_alias1"):
 		__push_ok(desc, ["`say_alias1` erased successfully"])
 	else:
 		__push_error(desc, ["`say_alias1` still exists after deletion"])
@@ -252,6 +268,11 @@ func __test_console_exec() -> void:
 		__push_ok(desc, ["exec with ext worked"])
 	else:
 		__push_error(desc, ["exec with ext failed"])
+	
+	if GsomConsole.log_text.contains("test multi line commands"):
+		__push_ok(desc, ["exec multiline syntax works"])
+	else:
+		__push_error(desc, ["exec multiline syntax failed"])
 	
 	GsomConsole.log_text = ""
 	GsomConsole.submit("exec example")
