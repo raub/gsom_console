@@ -282,13 +282,16 @@ func toggle() -> void:
 #region Submit
 
 ## Submit user input for parsing.
-func submit(expression: String, track__history: bool = true) -> void:
+func submit(expression: String, track_history: bool = true) -> void:
+	if track_history:
+		self.log("%s %s" % [__color(COLOR_SECONDARY, "\n>"), expression])
+	
 	var parsed: AstParser = AstParser.new(expression)
 	if parsed.error:
 		self.error("Syntax error. `%s`" % [parsed.error])
 		return
 	
-	if track__history:
+	if track_history:
 		push_history(expression.strip_edges())
 	
 	__submit_ast(parsed.ast)

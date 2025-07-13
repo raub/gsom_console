@@ -119,6 +119,7 @@ theme_override_constants/line_separation = 6
 theme_override_styles/focus = SubResource("StyleBoxEmpty_p7l3d")
 bbcode_enabled = true
 scroll_following = true
+threaded = true
 selection_enabled = true
 
 [node name="ContainerHint" type="PanelContainer" parent="Panel/ColumnMain/BgLog"]

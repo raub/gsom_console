@@ -187,7 +187,7 @@ func __cmd_ifvv(args: PackedStringArray) -> void:
 	var value_type: int = typeof(value1)
 	
 	var value2 = GsomConsole.get_cvar(cvar_name2)
-	var converted = GsomConsole.convert_value(value_type, value2)
+	var converted = GsomConsole.convert_value(value_type, str(value2))
 	
 	var cmp_result = false
 	match args[1]:
@@ -349,13 +349,13 @@ func __cmd_write_groups(args: PackedStringArray) -> void:
 	if !query_groups.size() or query_groups.has("cvar"):
 		var cvar_batch = ""
 		for key in GsomConsole.list_cvars():
-			out_string += "%s %s\n" % [key, GsomConsole.get_cvar(key)]
+			cvar_batch += "%s %s\n" % [key, GsomConsole.get_cvar(key)]
 		if cvar_batch:
 			out_string += "# CVARs\n\n%s" % cvar_batch
 	if !query_groups.size() or query_groups.has("alias"):
 		var alias_batch = ""
 		for key in __list_aliases():
-			out_string += "%s %s\n" % [key, GsomConsole.get_cvar(key)]
+			alias_batch += "alias %s \"%s\"\n" % [key, __aliases[key]]
 		if alias_batch:
 			out_string += "\n\n# Aliases\n\n%s" % alias_batch
 	
@@ -410,7 +410,7 @@ func __search_and_exec(exec_name: String) -> void:
 		
 		multi_line = multi_line + new_line
 		if multi_line.ends_with("\\"): # merge with next line
-			multi_line = multi_line.rstrip("\\\n")
+			multi_line = multi_line.rstrip("\\")
 		else:
 			GsomConsole.submit(multi_line, false)
 			multi_line = ""
@@ -462,22 +462,21 @@ func __cmd_help(args: PackedStringArray) -> void:
 		for arg: String in args:
 			var color: String = __get_help_color()
 			var builtin_help: String = __get_builtin_help(arg)
+			var text = ""
 			if builtin_help:
-				result.append(
-					__color(color, "[b]%s[/b] - %s\n" % [arg, builtin_help]),
-				)
-			if GsomConsole.has_cmd(arg):
-				result.append(
-					__color(color, "[b]%s[/b] - %s\n" % [arg, GsomConsole.get_cmd_help(arg)]),
-				)
+				text = builtin_help
+			elif GsomConsole.has_cmd(arg):
+				text = GsomConsole.get_cmd_help(arg)
 			elif GsomConsole.has_cvar(arg):
-				result.append(
-					__color(color, "[b]%s[/b] - %s\n" % [arg, GsomConsole.get_cvar_help(arg)]),
-				)
+				text = GsomConsole.get_cvar_help(arg)
 			elif __has_alias(arg):
-				result.append(
-					__color(color, "[b]%s[/b] - %s\n" % [arg, __get_alias_help(arg)]),
-				)
+				text = __get_alias_help(arg)
+			
+			if text:
+				var lines: PackedStringArray = text.split('. ')
+				for line_idx: int in range(lines.size()):
+					lines[line_idx] = "\t" + lines[line_idx]
+				result.append(__color(color, "[b]%s[/b]\n%s\n" % [arg, ".\n".join(lines)]))
 			else:
 				result.append(
 					__color(GsomConsole.COLOR_ERROR, "[b]%s[/b] - No such command/variable.\n" % arg)
