@@ -11,13 +11,23 @@ signal changed_cvar(cvar_name: String)
 ## A CMD was called. All listeners will receive the command name and list of args.
 signal called_cmd(cmd_name: String, args: PackedStringArray)
 
-## Console visibility toggled. In case you use the default visibility logic
-## that comes with this singleton.
+## Console visibility toggled.
+## 
+## This is for UI that wants to use the default visibility logic.
+## E.g. the UI that is available by default with this addon.
 signal toggled(is_visible: bool)
 
-## A log string was added. Only the latest addition is passed
-## to the signal. The whole log text is available as `log_text` prop.
+## A log string was added.
+## 
+## Only the latest addition is passed to the signal.
+## The whole log text is available as `log_text` prop.
+## The argument contains the added text as-is, including the newline.
 signal logged(rich_text: String)
+
+## Cleared the console output by a call to `clear()`.
+##
+## This is to be handled separately (by UIs) because the change is not incremental.
+signal cleared()
 
 const CommonUi := preload('./tools/common_ui.gd')
 const AstParser := preload('./tools/ast_parser.gd')
@@ -260,21 +270,21 @@ func get_matches(text: String) -> PackedStringArray:
 	return matcher.matched
 
 
-## Set `is_visible` to `false` if it was `true`. Only emits `on_toggle` if indeed changed.
+## Set `is_visible` to `false` if it was `true`. Only emits `toggled` if indeed changed.
 func hide() -> void:
 	if __is_visible:
 		__is_visible = false
 		toggled.emit(false)
 
 
-## Set `is_visible` to `true` if it was `false`. Only emits `on_toggle` if indeed changed.
+## Set `is_visible` to `true` if it was `false`. Only emits `toggled` if indeed changed.
 func show() -> void:
 	if !__is_visible:
 		__is_visible = true
 		toggled.emit(true)
 
 
-## Changes the `is_visible` value to the opposite and emits `on_toggle`.
+## Changes the `is_visible` value to the opposite and emits `toggled`.
 func toggle() -> void:
 	__is_visible = !__is_visible
 	toggled.emit(__is_visible)
@@ -340,10 +350,16 @@ func __submit_part(ast_part: PackedStringArray) -> void:
 
 #endregion
 
-## Appends `msg` to `log_text` and emits `on_log`.
+## Crears the output logs and emits `cleared`.
+func clear() -> void:
+	__log_text = ""
+	cleared.emit()
+
+## Appends `msg` to `log_text` and emits `logged`.
 func log(msg: String) -> void:
-	__log_text += msg + "\n"
-	logged.emit(msg)
+	var with_newline = msg + "\n"
+	__log_text += with_newline
+	logged.emit(with_newline)
 
 
 ## Wraps `msg` with color BBCode and calls `log`.

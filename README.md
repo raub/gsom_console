@@ -229,6 +229,7 @@ The development focus of this plugin is following:
 - [x] Console output for executed commands
 - [x] Save specific variables to configuration files
 - [x] Save all CVARs, aliases, etc. to files
+- [x] Dump all console content to text file.
 
 **Input and Binding Integration**
 
@@ -244,3 +245,6 @@ The development focus of this plugin is following:
 - [x] Search/filter commands - `find`
 - [x] Conditional logic
 - [x] Increment/decrement variables
+- [x] Open the `user://` folder.
+- [x] Switch to any scene or to the main one.
+- [x] Clear console from code or command.

@@ -35,7 +35,10 @@ func _init(
 	__handle_visibility(GsomConsole.is_visible)
 	
 	GsomConsole.logged.connect(__handle_log_change)
-	__handle_log_change()
+	if __label_log:
+		__label_log.text = GsomConsole.log_text
+	
+	GsomConsole.cleared.connect(__handle_log_clear)
 	
 	if __button_close:
 		__button_close.pressed.connect(GsomConsole.hide)
@@ -65,9 +68,14 @@ func __handle_visibility(is_visible: bool) -> void:
 		__reset_hint_state()
 
 
-func __handle_log_change(_text: String = "") -> void:
+func __handle_log_change(text: String = "") -> void:
 	if __label_log:
-		__label_log.text = GsomConsole.log_text
+		__label_log.append_text(text)
+
+
+func __handle_log_clear() -> void:
+	if __label_log:
+		__label_log.text = ""
 
 
 func __handle_hint_button(sender: Button) -> void:

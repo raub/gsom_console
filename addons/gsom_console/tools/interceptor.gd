@@ -21,6 +21,9 @@ var __intercepted: Dictionary[String, String] = {
 	"ifvv": "Takes 4+ args: variable1, cmp, variable2, ...action. Cmp is one of: ==,!=,>,>=,<,<=. E.g.: `ifvv var1 < var2 \"alias out echo var1\"`.",
 	"inc": "Increments CVAR value by 1, 1.0, true, ' ' (depending on type), or your custom values. Use `inc x` or `inc s abcd`.",
 	"dec": "Decrements CVAR value by -1, -1.0, false, 1-char (depending on type), or your custom values. Use `dec x` or `dec s xyz`.",
+	"condump": "Dumps all the console content into a text file. Takes filename as an optional parameter.",
+	"open_user": "Opens the platform-specific location of the `user://` directory. Optionally accepts additional path.",
+	"clear": "Clears the console output.",
 }
 
 
@@ -49,6 +52,9 @@ func intercept(ast: PackedStringArray) -> bool:
 		"ifvv": __cmd_ifvv(args)
 		"inc": __cmd_inc(args)
 		"dec": __cmd_dec(args)
+		"condump": __cmd_condump(args)
+		"open_user": __cmd_open_user(args)
+		"clear": __cmd_clear()
 		_: pass
 	
 	if __has_alias(cmd_name):
@@ -282,6 +288,41 @@ func __cmd_dec(args: PackedStringArray) -> void:
 	GsomConsole.show_cvar(cvar_name)
 
 
+func __cmd_condump(args: PackedStringArray) -> void:
+	var arg_path = args[0] if args.size() else "condump.txt"
+	var file_path = "user://" + arg_path
+	
+	var file = FileAccess.open(file_path, FileAccess.WRITE)
+	
+	if !file:
+		GsomConsole.warn("File '[b]%s[/b]' can't be written." % file_path)
+		return
+	
+	GsomConsole.log("Dumping the console text to '[b]%s[/b]'." % file_path)
+	
+	var regex = RegEx.new()
+	regex.compile("\\[.+?\\]")
+	var clean = regex.sub(GsomConsole.log_text, "", true)
+	
+	file.store_line(clean)
+
+func __cmd_open_user(args: PackedStringArray) -> void:
+	var arg_path = args[0] if args.size() else ""
+	var dir_path = "user://" + arg_path
+	
+	if !DirAccess.dir_exists_absolute(dir_path):
+		GsomConsole.warn("Directory '[b]%s[/b]' doesn't exist." % dir_path)
+		return
+	
+	GsomConsole.log("Opening the directory '[b]%s[/b]'." % dir_path)
+	
+	OS.shell_open(ProjectSettings.globalize_path(dir_path))
+
+
+func __cmd_clear() -> void:
+	GsomConsole.clear()
+
+
 func __cmd_exec(args: PackedStringArray) -> void:
 	if !args.size():
 		GsomConsole.log(
@@ -329,7 +370,12 @@ func __cmd_write_cvars(args: PackedStringArray) -> void:
 		out_string += "%s %s\n" % [key, GsomConsole.get_cvar(key)]
 	
 	var file = FileAccess.open(file_name, FileAccess.WRITE)
+	if !file:
+		GsomConsole.warn("File '[b]%s[/b]' can't be written." % file_name)
+		return
+	
 	file.store_line(out_string)
+	GsomConsole.warn("Written CVARs to file '[b]%s[/b]'.")
 
 
 func __cmd_write_groups(args: PackedStringArray) -> void:
@@ -363,7 +409,14 @@ func __cmd_write_groups(args: PackedStringArray) -> void:
 		GsomConsole.warn("No groups found to write. The output file will be empty.")
 	
 	var file = FileAccess.open(file_name, FileAccess.WRITE)
+	if !file:
+		GsomConsole.warn("File '[b]%s[/b]' can't be written." % file_name)
+		return
+	
 	file.store_line(out_string)
+	GsomConsole.warn("Written file '[b]%s[/b]' with groups: %s." % [
+		file_name, ", ".join(query_groups)
+	])
 
 
 # Receives a console script name - with or without extension (`EXEC_EXT`).
