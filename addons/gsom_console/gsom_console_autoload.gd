@@ -33,6 +33,7 @@ const CommonUi := preload('./tools/common_ui.gd')
 const AstParser := preload('./tools/ast_parser.gd')
 const TextMatcher := preload('./tools/text_matcher.gd')
 const Interceptor := preload('./tools/interceptor.gd')
+const IoManager := preload('./tools/io_manager.gd')
 
 const __TYPE_NAMES: Dictionary = {
 	TYPE_BOOL: "bool",
@@ -56,6 +57,7 @@ var CMD_WAIT: String = "wait"
 var EXEC_EXT: String = ".cfg"
 
 var interceptor: Interceptor = Interceptor.new()
+var io_manager: IoManager = IoManager.new()
 
 var __log_text: String = ""
 ## The whole log text content. This may be also used to reset the log.
