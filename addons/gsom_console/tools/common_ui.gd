@@ -140,7 +140,7 @@ func __handle_input_keys(event: InputEvent) -> void:
 		return
 	
 	if event is InputEventKey:
-		__handle_key(event)
+		__handle_key(event as InputEventKey)
 
 
 func __handle_key(event: InputEventKey) -> void:
@@ -239,16 +239,16 @@ func __render_hints() -> void:
 	var sublen: int = sublist.size()
 	var children: Array[Node] = __column_hint.get_children() if __column_hint else []
 	var child_count: int = children.size()
-	var list_len: int = __list_hint.size()
 	var index_final: int = __get_positive__index()
 	var text: String = __list_hint[index_final]
 	
 	for i: int in range(0, child_count):
 		var idx: int = child_count - 1 - i
-		children[idx].visible = i < sublen
+		var button: Button = children[idx] as Button
+		button.visible = i < sublen
 		if i < sublen:
-			children[idx].text = sublist[i]
-			children[idx].flat = !__is_hint or (sub_range[0] + i != index_final)
+			button.text = sublist[i]
+			button.flat = !__is_hint or (sub_range[0] + i != index_final)
 
 
 # Convert `__index` to pozitive and keep within `__list_hint` bounds
@@ -268,8 +268,8 @@ func __get_sublist() -> Array[int]:
 	if index_final < 3:
 		return [0, 4]
 	
-	var index_last: int = list_len - 1
-	var end_at: int = min(index_final + 2, list_len)
+	#var index_last: int = list_len - 1
+	var end_at: int = mini(index_final + 2, list_len)
 	var start_at: int = end_at - 4
 	
 	return [start_at, end_at]

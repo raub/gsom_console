@@ -2,8 +2,6 @@ extends RefCounted
 
 # such as "forward", "jump" - tracks activity of the action
 var __base_actions: Dictionary[String, bool] = {}
-# such as "custom_action" - tracks activity of the action
-var __alias_actions: Dictionary[String, bool] = {}
 
 # "alias +custom_action ___" - "custom_action: ___" goes here
 var __plus_aliases: Dictionary[String, Array] = {}
@@ -31,7 +29,7 @@ func bind_input(input_name: String, command: String) -> void:
 	if !__input_to_command.has(input_name):
 		return
 	
-	var parsed = GsomConsole.AstParser.new(command)
+	var parsed := GsomConsole.AstParser.new(command)
 	if parsed.error:
 		GsomConsole.error("Bind syntax error. `%s`" % [parsed.error])
 		return
@@ -189,22 +187,6 @@ func get_name_by_event(e: InputEvent) -> String:
 		return ""
 	
 	return ""
-
-
-func get_state_from_event(e: InputEvent) -> bool:
-	if e is InputEventKey:
-		var e_key := e as InputEventKey
-		return e.is_pressed()
-	
-	if e is InputEventMouseButton:
-		var e_button := e as InputEventMouseButton
-		return e.is_pressed()
-	
-	if e is InputEventJoypadButton:
-		var e_button := e as InputEventJoypadButton
-		return e.is_pressed()
-	
-	return false
 
 
 func get_label_by_name(input_name: String) -> String:

@@ -11,17 +11,18 @@ var __matched: PackedStringArray = []
 func _init(text: String, available: PackedStringArray) -> void:
 	var query := text.to_lower()
 	var scored: Array[Dictionary] = []
-
-	for token in available:
+	
+	for token: String in available:
 		var lower := token.to_lower()
 		var score := __get_match_score(query, lower)
 		if score >= 200:
 			scored.append({ "token": token, "score": score })
-
+	
 	scored.sort_custom(__sort_descending_by_score)
-
-	for entry in scored:
-		__matched.append(entry["token"])
+	
+	for entry: Dictionary in scored:
+		var token: String = entry["token"]
+		__matched.append(token)
 
 
 func __get_match_score(query: String, target: String) -> int:
@@ -48,13 +49,13 @@ func __get_match_score(query: String, target: String) -> int:
 
 
 func __length_penalty(query: String, target: String) -> int:
-	return abs(query.length() - target.length()) * 20
+	return absi(query.length() - target.length()) * 20
 
 
 func __sequence_match_score(query: String, target: String) -> int:
-	var index := 0
-	for char in query:
-		index = target.find(char, index)
+	var index: int = 0
+	for letter: String in query:
+		index = target.find(letter, index)
 		if index == -1:
 			return -1
 		index += 1
@@ -73,20 +74,20 @@ func __levenshtein(a: String, b: String) -> int:
 	if len_b == 0:
 		return len_a
 
-	var matrix := []
-	for i in len_a + 1:
+	var matrix: Array[Array] = []
+	for i: int in len_a + 1:
 		matrix.append([])
-		for j in len_b + 1:
+		for j: int in len_b + 1:
 			matrix[i].append(0)
 
-	for i in len_a + 1:
+	for i: int in len_a + 1:
 		matrix[i][0] = i
-	for j in len_b + 1:
+	for j: int in len_b + 1:
 		matrix[0][j] = j
 
-	for i in range(1, len_a + 1):
-		for j in range(1, len_b + 1):
-			var cost := 0 if a[i - 1] == b[j - 1] else 1
+	for i: int in range(1, len_a + 1):
+		for j: int in range(1, len_b + 1):
+			var cost: int = 0 if a[i - 1] == b[j - 1] else 1
 			matrix[i][j] = min(
 				matrix[i - 1][j] + 1,
 				matrix[i][j - 1] + 1,
@@ -97,8 +98,8 @@ func __levenshtein(a: String, b: String) -> int:
 
 
 func __longest_common_prefix(a: String, b: String) -> String:
-	var min_len := min(a.length(), b.length())
-	var i := 0
+	var min_len := mini(a.length(), b.length())
+	var i: int = 0
 	while i < min_len and a[i] == b[i]:
 		i += 1
 	return a.substr(0, i)

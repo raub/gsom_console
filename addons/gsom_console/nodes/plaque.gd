@@ -2,7 +2,6 @@ extends Control
 
 const __MIN_HEIGHT: float = 320
 
-var __is_drag: bool = false
 var __is_resize: bool = false
 var __grab_pos_mouse := Vector2()
 var __grab_pos_wrapper := Vector2()
@@ -11,16 +10,20 @@ var __grab_size := Vector2()
 
 var __wrapper_pos := Vector2.ZERO:
 	get:
-		return get_parent().position
+		var parent: Control = get_parent()
+		return parent.position
 	set(v):
-		get_parent().position = v
+		var parent: Control = get_parent()
+		parent.position = v
 
 
 var __wrapper_size := Vector2(0, __MIN_HEIGHT):
 	get:
-		return get_parent().size
+		var parent: Control = get_parent()
+		return parent.size
 	set(v):
-		get_parent().size = v
+		var parent: Control = get_parent()
+		parent.size = v
 
 var __wrapper_height: float = __MIN_HEIGHT:
 	get:
@@ -31,7 +34,7 @@ var __wrapper_height: float = __MIN_HEIGHT:
 
 var __view_size := Vector2(0, __MIN_HEIGHT):
 	get:
-		return get_viewport().size
+		return get_viewport().get_visible_rect().size
 
 
 var __view_height: float = __MIN_HEIGHT:
@@ -47,7 +50,7 @@ var __view_height: float = __MIN_HEIGHT:
 @onready var __column_hint: Control = $Panel/ColumnMain/BgLog/ContainerHint/ContainerHintInner/ColumnHint
 @onready var __resize_bottom: Control = $Resizers/ResizeBottom
 
-var __common_logic = null
+var __common_logic: GsomConsole.CommonUi = null
 
 
 func _ready() -> void:
@@ -83,9 +86,11 @@ func __handle_input_resize_bottom(event: InputEvent) -> void:
 		return
 	
 	if event is InputEventMouseButton:
-		__handle_mouse_button_resize(event)
+		var e_button: InputEventMouseButton = event
+		__handle_mouse_button_resize(e_button)
 	elif event is InputEventMouseMotion and __is_resize:
-		__handle_mouse_move_resize_bottom(event)
+		var e_motion: InputEventMouseMotion = event
+		__handle_mouse_move_resize_bottom(e_motion)
 
 
 func __handle_mouse_move_resize_bottom(event: InputEventMouseMotion) -> void:

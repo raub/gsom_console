@@ -80,7 +80,7 @@ func intercept(ast: PackedStringArray) -> bool:
 
 
 func get_keys() -> Array[String]:
-	var keys = __aliases.keys();
+	var keys: Array[String] = __aliases.keys();
 	keys.append_array(__intercepted.keys())
 	return keys
 
@@ -131,7 +131,7 @@ func __cmd_set(args: PackedStringArray) -> void:
 		GsomConsole.warn("Syntax: 'set name 123'.")
 		return
 		
-	var cvar_name = args[0]
+	var cvar_name: String = args[0]
 	if !GsomConsole.has_cvar(cvar_name):
 		GsomConsole.warn("CVAR '%s' not found." % cvar_name)
 		return
@@ -144,12 +144,12 @@ func __cmd_toggle(args: PackedStringArray) -> void:
 		GsomConsole.warn("Syntax: 'toggle name'.")
 		return
 	
-	var cvar_name = args[0]
+	var cvar_name: String = args[0]
 	if !GsomConsole.has_cvar(cvar_name):
 		GsomConsole.warn("CVAR '%s' not found." % cvar_name)
 		return
 	
-	var value = GsomConsole.get_cvar(cvar_name)
+	var value: Variant = GsomConsole.get_cvar(cvar_name)
 	var value_type: int = typeof(value)
 	match value_type:
 		TYPE_BOOL: GsomConsole.set_cvar(cvar_name, !value)
@@ -166,17 +166,17 @@ func __cmd_ifvi(args: PackedStringArray) -> void:
 	if args.size() < 4:
 		GsomConsole.warn("Syntax requires 4 or more args: 'ifvi var > 1 do_something'.")
 		return
-	var cvar_name = args[0]
+	var cvar_name: String = args[0]
 	if !GsomConsole.has_cvar(cvar_name):
 		GsomConsole.warn("CVAR '%s' not found." % cvar_name)
 		return
 	
-	var value = GsomConsole.get_cvar(cvar_name)
+	var value: Variant = GsomConsole.get_cvar(cvar_name)
 	var value_type: int = typeof(value)
 	
-	var immediate = GsomConsole.convert_value(value_type, args[2])
+	var immediate: Variant = GsomConsole.convert_value(value_type, args[2])
 	
-	var cmp_result = false
+	var cmp_result := false
 	match args[1]:
 		'==': cmp_result = value == immediate
 		'>=': cmp_result = value >= immediate
@@ -192,22 +192,22 @@ func __cmd_ifvv(args: PackedStringArray) -> void:
 	if args.size() < 4:
 		GsomConsole.warn("Syntax requires 4 or more args: 'ifvv var1 == var2 do_something'.")
 		return
-	var cvar_name1 = args[0]
+	var cvar_name1: String = args[0]
 	if !GsomConsole.has_cvar(cvar_name1):
 		GsomConsole.warn("CVAR '%s' not found." % cvar_name1)
 		return
-	var cvar_name2 = args[2]
+	var cvar_name2: String = args[2]
 	if !GsomConsole.has_cvar(cvar_name2):
 		GsomConsole.warn("CVAR '%s' not found." % cvar_name2)
 		return
 	
-	var value1 = GsomConsole.get_cvar(cvar_name1)
+	var value1: Variant = GsomConsole.get_cvar(cvar_name1)
 	var value_type: int = typeof(value1)
 	
-	var value2 = GsomConsole.get_cvar(cvar_name2)
-	var converted = GsomConsole.convert_value(value_type, str(value2))
+	var value2: Variant = GsomConsole.get_cvar(cvar_name2)
+	var converted: Variant = GsomConsole.convert_value(value_type, str(value2))
 	
-	var cmp_result = false
+	var cmp_result := false
 	match args[1]:
 		'==': cmp_result = value1 == converted
 		'>=': cmp_result = value1 >= converted
@@ -224,14 +224,14 @@ func __cmd_inc(args: PackedStringArray) -> void:
 	if args.size() < 1:
 		GsomConsole.warn("Syntax requires 2 or more args: `inc x` or `inc x 0.132`.")
 		return
-	var cvar_name = args[0]
+	var cvar_name: String = args[0]
 	if !GsomConsole.has_cvar(cvar_name):
 		GsomConsole.warn("CVAR '%s' not found." % cvar_name)
 		return
 	
-	var value = GsomConsole.get_cvar(cvar_name)
+	var value: Variant = GsomConsole.get_cvar(cvar_name)
 	var value_type: int = typeof(value)
-	var immediate = null
+	var immediate: Variant = null
 	if args.size() > 1:
 		immediate = GsomConsole.convert_value(value_type, args[1])
 	
@@ -264,14 +264,14 @@ func __cmd_dec(args: PackedStringArray) -> void:
 	if args.size() < 1:
 		GsomConsole.warn("Syntax requires 2 or more args: `dec x` or `dec x 10`.")
 		return
-	var cvar_name = args[0]
+	var cvar_name: String = args[0]
 	if !GsomConsole.has_cvar(cvar_name):
 		GsomConsole.warn("CVAR '%s' not found." % cvar_name)
 		return
 	
-	var value = GsomConsole.get_cvar(cvar_name)
+	var value: Variant = GsomConsole.get_cvar(cvar_name)
 	var value_type: int = typeof(value)
-	var immediate = null
+	var immediate: Variant = null
 	if args.size() > 1:
 		immediate = GsomConsole.convert_value(value_type, args[1])
 	
@@ -296,15 +296,16 @@ func __cmd_dec(args: PackedStringArray) -> void:
 			if immediate == null:
 				GsomConsole.set_cvar(cvar_name, valueStr.substr(0, valueStr.length() - 1))
 			else:
-				GsomConsole.set_cvar(cvar_name, valueStr.rstrip(immediate))
+				var imm_string: String = immediate
+				GsomConsole.set_cvar(cvar_name, valueStr.rstrip(imm_string))
 	GsomConsole.show_cvar(cvar_name)
 
 
 func __cmd_condump(args: PackedStringArray) -> void:
-	var arg_path = args[0] if args.size() else "condump.txt"
-	var file_path = "user://" + arg_path
+	var arg_path: String = args[0] if args.size() else "condump.txt"
+	var file_path: String = "user://" + arg_path
 	
-	var file = FileAccess.open(file_path, FileAccess.WRITE)
+	var file := FileAccess.open(file_path, FileAccess.WRITE)
 	
 	if !file:
 		GsomConsole.warn("File '[b]%s[/b]' can't be written." % file_path)
@@ -312,15 +313,15 @@ func __cmd_condump(args: PackedStringArray) -> void:
 	
 	GsomConsole.log("Dumping the console text to '[b]%s[/b]'." % file_path)
 	
-	var regex = RegEx.new()
+	var regex := RegEx.new()
 	regex.compile("\\[.+?\\]")
-	var clean = regex.sub(GsomConsole.log_text, "", true)
+	var clean: String = regex.sub(GsomConsole.log_text, "", true)
 	
 	file.store_line(clean)
 
 func __cmd_open_user(args: PackedStringArray) -> void:
-	var arg_path = args[0] if args.size() else ""
-	var dir_path = "user://" + arg_path
+	var arg_path: String = args[0] if args.size() else ""
+	var dir_path: String = "user://" + arg_path
 	
 	if !DirAccess.dir_exists_absolute(dir_path):
 		GsomConsole.warn("Directory '[b]%s[/b]' doesn't exist." % dir_path)
@@ -338,7 +339,7 @@ func __cmd_list_bound_commands(args: PackedStringArray) -> void:
 	var result: PackedStringArray = []
 	var showUnbound: bool = args.size() > 0
 	
-	var input_names = (
+	var input_names: Array[String] = (
 		Array(args) if args.size() else GsomConsole.io_manager.get_input_names()
 	)
 	
@@ -360,7 +361,7 @@ func __cmd_list_bound_commands(args: PackedStringArray) -> void:
 
 func __cmd_list_bind_names() -> void:
 	var result: PackedStringArray = []
-	var input_list = GsomConsole.io_manager.get_input_names()
+	var input_list: Array[String] = GsomConsole.io_manager.get_input_names()
 	
 	for input_name: String in input_list:
 		var color: String = __get_help_color()
@@ -413,13 +414,13 @@ func __cmd_write_cvars(args: PackedStringArray) -> void:
 	if !file_name.ends_with(GsomConsole.EXEC_EXT):
 		file_name += GsomConsole.EXEC_EXT
 	
-	var query_keys = args.slice(1)
-	var available_keys = GsomConsole.list_cvars()
-	var cvar_keys = []
+	var query_keys: PackedStringArray = args.slice(1)
+	var available_keys: Array[String] = GsomConsole.list_cvars()
+	var cvar_keys: Array[String] = []
 	if !query_keys.size():
 		cvar_keys = available_keys
 	else:
-		for key in query_keys:
+		for key: String in query_keys:
 			if available_keys.has(key):
 				cvar_keys.append(key)
 			else:
@@ -430,11 +431,11 @@ func __cmd_write_cvars(args: PackedStringArray) -> void:
 	if !cvar_keys.size():
 		GsomConsole.warn("No CVARs found to write. The output file will be empty.")
 	
-	var out_string = ""
-	for key in cvar_keys:
+	var out_string := ""
+	for key: String in cvar_keys:
 		out_string += "%s %s\n" % [key, GsomConsole.get_cvar(key)]
 	
-	var file = FileAccess.open(file_name, FileAccess.WRITE)
+	var file := FileAccess.open(file_name, FileAccess.WRITE)
 	if !file:
 		GsomConsole.warn("File '[b]%s[/b]' can't be written." % file_name)
 		return
@@ -454,18 +455,18 @@ func __cmd_write_groups(args: PackedStringArray) -> void:
 	if !file_name.ends_with(GsomConsole.EXEC_EXT):
 		file_name += GsomConsole.EXEC_EXT
 	
-	var query_groups = args.slice(1)
-	var out_string = ""
+	var query_groups: PackedStringArray = args.slice(1)
+	var out_string := ""
 	
 	if !query_groups.size() or query_groups.has("cvar"):
-		var cvar_batch = ""
-		for key in GsomConsole.list_cvars():
+		var cvar_batch := ""
+		for key: String in GsomConsole.list_cvars():
 			cvar_batch += "%s %s\n" % [key, GsomConsole.get_cvar(key)]
 		if cvar_batch:
 			out_string += "# CVARs\n\n%s" % cvar_batch
 	if !query_groups.size() or query_groups.has("alias"):
-		var alias_batch = ""
-		for key in __list_aliases():
+		var alias_batch := ""
+		for key: String in __list_aliases():
 			alias_batch += "alias %s \"%s\"\n" % [key, __aliases[key]]
 		if alias_batch:
 			out_string += "\n\n# Aliases\n\n%s" % alias_batch
@@ -473,7 +474,7 @@ func __cmd_write_groups(args: PackedStringArray) -> void:
 	if !out_string:
 		GsomConsole.warn("No groups found to write. The output file will be empty.")
 	
-	var file = FileAccess.open(file_name, FileAccess.WRITE)
+	var file := FileAccess.open(file_name, FileAccess.WRITE)
 	if !file:
 		GsomConsole.warn("File '[b]%s[/b]' can't be written." % file_name)
 		return
@@ -493,7 +494,7 @@ func __cmd_write_groups(args: PackedStringArray) -> void:
 func __search_and_exec(exec_name: String) -> void:
 	var file: FileAccess = null
 	
-	for dir_path in GsomConsole.exec_paths:
+	for dir_path: String in GsomConsole.exec_paths:
 		file = FileAccess.open(dir_path + exec_name, FileAccess.READ)
 		if file:
 			break
@@ -551,9 +552,7 @@ func __get_builtin_help(name: String) -> String:
 	return ""
 
 func __cmd_find(args: PackedStringArray) -> void:
-	var result: PackedStringArray = []
-	
-	# `fund query` - query required
+	# `find query` - query required
 	if !args.size():
 		GsomConsole.error(
 			"Find requires a query: `find ___` - insert what you wish to find.",
@@ -578,7 +577,7 @@ func __cmd_help(args: PackedStringArray) -> void:
 		for arg: String in args:
 			var color: String = __get_help_color()
 			var builtin_help: String = __get_builtin_help(arg)
-			var text = ""
+			var text := ""
 			if builtin_help:
 				text = builtin_help
 			elif GsomConsole.has_cmd(arg):
@@ -611,7 +610,7 @@ func __cmd_help(args: PackedStringArray) -> void:
 
 # Mutates `dest` by adding CMDs info
 func __append_builtin_list(dest: PackedStringArray) -> void:
-	var keys = __intercepted.keys()
+	var keys: Array[String] = __intercepted.keys()
 	keys.append(GsomConsole.CMD_WAIT)
 	
 	dest.append("Available built-ins:\n")
@@ -623,7 +622,7 @@ func __append_builtin_list(dest: PackedStringArray) -> void:
 
 # Mutates `dest` by adding CMDs info
 func __append_cvar_list(dest: PackedStringArray) -> void:
-	var keys = GsomConsole.list_cvars()
+	var keys: Array[String] = GsomConsole.list_cvars()
 	if !keys.size():
 		dest.append("There are no variables, yet.\n")
 		return
@@ -637,7 +636,7 @@ func __append_cvar_list(dest: PackedStringArray) -> void:
 
 # Mutates `dest` by adding CMDs info
 func __append_cmd_list(dest: PackedStringArray) -> void:
-	var keys = GsomConsole.list_cmds()
+	var keys: Array[String] = GsomConsole.list_cmds()
 	if !keys.size():
 		dest.append("There are no commands, yet.\n")
 		return

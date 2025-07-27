@@ -86,7 +86,10 @@ var __is_visible: bool = false
 	get:
 		return __is_visible
 	set(v):
-		self['show' if v else 'hide'].call()
+		if v:
+			self.show()
+		else:
+			self.hide()
 
 
 var __history: PackedStringArray = []
@@ -99,7 +102,6 @@ var __history: PackedStringArray = []
 var __cvars: Dictionary[String, Dictionary] = {}
 var __cmds: Dictionary[String, Dictionary] = {}
 var __next: Array[Array] = []
-var __help_color_idx: int = 0
 
 #region Input
 
@@ -161,14 +163,15 @@ func convert_value(value_type: int, new_value: String) -> Variant:
 		_: return str(new_value)
 
 func __adjust_type(old_value: Variant, new_value: String) -> Variant:
-	var value_type = typeof(old_value)
+	var value_type: int = typeof(old_value)
 	return convert_value(value_type, new_value)
 
 func show_cvar(cvar_name: String) -> void:
 	if !__cvars.has(cvar_name):
 		self.warn("CVAR '%s' not found." % cvar_name)
 		return
-	self.log(__cvars[cvar_name].hint)
+	var hint: String = __cvars[cvar_name].hint
+	self.log(hint)
 
 # Assign new value to the CVAR.
 func set_cvar(cvar_name: String, value: Variant) -> void:
@@ -288,11 +291,11 @@ func get_matches(text: String) -> PackedStringArray:
 	if !text:
 		return matches
 	
-	var common_list = interceptor.get_keys()
+	var common_list: Array[String] = interceptor.get_keys()
 	common_list.append_array(__cvars.keys())
 	common_list.append_array(__cmds.keys())
 	
-	var matcher = TextMatcher.new(text, common_list)
+	var matcher := TextMatcher.new(text, common_list)
 	
 	return matcher.matched
 
@@ -367,9 +370,6 @@ func __submit_part(ast_part: PackedStringArray) -> void:
 			var g1: String = ast_part[1]
 			set_cvar(g0, g1)
 		
-		var result: Variant = get_cvar(g0)
-		var type_value: int = typeof(result)
-		var type_name: String = __TYPE_NAMES[type_value]
 		show_cvar(g0)
 		return
 	
@@ -384,7 +384,7 @@ func clear() -> void:
 
 ## Appends `msg` to `log_text` and emits `logged`.
 func log(msg: String) -> void:
-	var with_newline = msg + "\n"
+	var with_newline: String = msg + "\n"
 	__log_text += with_newline
 	logged.emit(with_newline)
 

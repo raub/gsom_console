@@ -2,7 +2,7 @@ extends Control
 
 const __IS_VERBOSE: bool = false
 
-@onready var __label = $ScrollContainer/RichTextLabel
+@onready var __label: RichTextLabel = $ScrollContainer/RichTextLabel
 
 func _ready() -> void:
 	__test_ast_valid()
@@ -436,7 +436,7 @@ func __test_console_write_cvars() -> void:
 		__push_error(desc, ["the test file is missing", OS.get_data_dir()])
 		return
 	
-	var content = file.get_as_text(true)
+	var content: String = file.get_as_text(true)
 	if content.contains("test_write_cvar test-text"):
 		__push_ok(desc, ["writes cvars to file"])
 	else:
@@ -465,7 +465,7 @@ func __test_console_write_groups() -> void:
 		__push_error(desc, ["the test file is missing", OS.get_data_dir()])
 		return
 	
-	var content = file.get_as_text(true)
+	var content: String = file.get_as_text(true)
 	if (
 		content.contains("test_write_cvar test-text") and
 		content.contains("alias alias_write_groups \"test_write_groups\"")
@@ -766,16 +766,18 @@ func __test_text_matcher() -> void:
 	var desc: Dictionary = __describe("Text Matcher")
 	
 	for matcher_case: Dictionary in __matcher_cases:
-		var matched := GsomConsole.TextMatcher.new(matcher_case.text, matcher_case.available)
+		var matcher_text: String = matcher_case.text
+		var matcher_available: Array = matcher_case.available
+		var matched := GsomConsole.TextMatcher.new(matcher_text, matcher_available)
 		if str(matched.matched) != str(matcher_case.expected):
 			__push_error(desc, [
-				"Text Match: `%s` %s" % [matcher_case.text, matcher_case.available],
+				"Text Match: `%s` %s" % [matcher_text, matcher_available],
 				"%s (actual)" % str(matched.matched),
 				"%s (expected)" % str(matcher_case.expected),
 			])
 		else:
 			__push_ok(desc, [
-				"Text Match: `%s` %s" % [matcher_case.text, matcher_case.available],
+				"Text Match: `%s` %s" % [matcher_text, matcher_available],
 				"Matched: %s" % str(matched.matched),
 			])
 	

@@ -75,7 +75,7 @@ func __deferred_layout() -> void:
 
 const __MIN_HEIGHT: float = 320
 const __PATH_BLUR: String = "Panel/Blur"
-const __PATH_LABEL_SUBMIT: String = "Panel/ColumnMain/RowInput/ButtonSubmit"
+const __PATH_BUTTON_SUBMIT: String = "Panel/ColumnMain/RowInput/ButtonSubmit"
 const __PATH_RESIZERS: String = "Resizers"
 
 const __ScenePlaque: PackedScene = preload("../nodes/plaque.tscn")
@@ -107,30 +107,36 @@ func _ready() -> void:
 	__deferred_layout.call_deferred()
 
 
-func __handle_visibility(is_visible: bool) -> void:
+func __handle_visibility(new_is_visible: bool) -> void:
 	if !Engine.is_editor_hint():
-		visible = !is_disabled and is_visible
+		visible = !is_disabled and new_is_visible
 
 #region Property Helpers
 
 func __assign_label_submit() -> void:
 	if __wnd:
-		__wnd.get_node(__PATH_LABEL_SUBMIT).text = __label_submit
+		var button: Button = __wnd.get_node(__PATH_BUTTON_SUBMIT)
+		button.text = __label_submit
 
 
 func __assign_blur() -> void:
 	if __wnd:
-		__wnd.get_node(__PATH_BLUR).material.set_shader_parameter("blur", __blur * 5.0)
+		var blur_rect: ColorRect = __wnd.get_node(__PATH_BLUR)
+		var mat: ShaderMaterial = blur_rect.material
+		mat.set_shader_parameter("blur", __blur * 5.0)
 
 
 func __assign_color() -> void:
 	if __wnd:
-		__wnd.get_node(__PATH_BLUR).material.set_shader_parameter("color", __color)
+		var blur_rect: ColorRect = __wnd.get_node(__PATH_BLUR)
+		var mat: ShaderMaterial = blur_rect.material
+		mat.set_shader_parameter("color", __color)
 
 
 func __assign_is_resize_enabled() -> void:
 	if __wnd:
-		__wnd.get_node(__PATH_RESIZERS).visible = __is_resize_enabled
+		var resizers: Control = __wnd.get_node(__PATH_RESIZERS)
+		resizers.visible = __is_resize_enabled
 
 
 func __assign_is_disabled() -> void:
