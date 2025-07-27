@@ -52,6 +52,7 @@ var __common_logic = null
 
 func _ready() -> void:
 	__common_logic = GsomConsole.CommonUi.new(
+		self,
 		__label_log,
 		__button_close,
 		__button_submit,

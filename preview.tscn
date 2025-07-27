@@ -117,3 +117,34 @@ offset_right = 1059.0
 offset_bottom = 784.0
 script = ExtResource("3_n3s36")
 metadata/_custom_type_script = "uid://dtj85h6uxam0w"
+
+[node name="Area" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 1383.0
+offset_top = 537.0
+offset_right = 1583.0
+offset_bottom = 737.0
+color = Color(0.0313483, 3.43578e-05, 0.0860165, 1)
+
+[node name="Actor" type="ColorRect" parent="Area"]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 20.0
+offset_right = 120.0
+offset_bottom = 60.0
+color = Color(0.62311, 0.328185, 0.0843659, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="Area"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Area/CenterContainer"]
+layout_mode = 2
+text = "WASD
+TFGH"
+horizontal_alignment = 1
+vertical_alignment = 1

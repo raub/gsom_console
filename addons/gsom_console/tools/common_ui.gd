@@ -5,6 +5,7 @@ var __list_hint: PackedStringArray = []
 var __is_history: bool = false
 var __index: int = 0
 
+var __container: Control = null
 var __label_log: RichTextLabel = null
 var __button_close: Button = null
 var __button_submit: Button = null
@@ -14,6 +15,7 @@ var __column_hint: Control = null
 
 
 func _init(
+	container: Control,
 	label_log: RichTextLabel,
 	button_close: Button,
 	button_submit: Button,
@@ -21,6 +23,7 @@ func _init(
 	container_hint: Control,
 	column_hint: Control,
 ) -> void:
+	__container = container
 	__label_log = label_log
 	__button_close = button_close
 	__button_submit = button_submit
@@ -45,9 +48,15 @@ func _init(
 	if __button_submit:
 		__button_submit.pressed.connect(__handle_submit)
 	
+	if __label_log:
+		__label_log.gui_input.connect(__handle_input_keys)
+	
+	if __container:
+		__container.gui_input.connect(__handle_input_keys)
+	
 	if __edit_cmd:
 		__edit_cmd.text_submitted.connect(__handle_submit)
-		__edit_cmd.gui_input.connect(__handle_edit_keys)
+		__edit_cmd.gui_input.connect(__handle_input_keys)
 		__edit_cmd.text_changed.connect(__handle_text_change)
 		__handle_text_change(__edit_cmd.text)
 	
@@ -117,13 +126,13 @@ func __handle_submit(_text: String = "") -> void:
 		
 		if __edit_cmd:
 			__edit_cmd.text = ""
-		GsomConsole.submit(cmd)
+		GsomConsole.submit(cmd, true)
 		return
 	
 	__apply_from_list()
 
 
-func __handle_edit_keys(event: InputEvent) -> void:
+func __handle_input_keys(event: InputEvent) -> void:
 	if (
 		Input.mouse_mode != Input.MOUSE_MODE_VISIBLE and
 		Input.mouse_mode != Input.MOUSE_MODE_CONFINED
@@ -135,17 +144,24 @@ func __handle_edit_keys(event: InputEvent) -> void:
 
 
 func __handle_key(event: InputEventKey) -> void:
+	if !event.is_pressed():
+		return
+	
 	if (
 		event.keycode == KEY_UP or
 		event.keycode == KEY_DOWN or
+		event.keycode == KEY_QUOTELEFT or
 		(__is_hint and event.keycode == KEY_ESCAPE)
 	):
 		if __edit_cmd:
 			__edit_cmd.accept_event()
 	
-	if !event.is_pressed():
-		if (__is_hint and event.keycode == KEY_ESCAPE):
-			__reset_hint_state()
+	if (__is_hint and event.keycode == KEY_ESCAPE):
+		__reset_hint_state()
+		return
+	
+	if (!__is_hint and (event.keycode == KEY_ESCAPE or event.keycode == KEY_QUOTELEFT)):
+		GsomConsole.hide()
 		return
 	
 	var cmd: String = __edit_cmd.text if __edit_cmd else ""

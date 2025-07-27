@@ -84,5 +84,5 @@ func _init(input: String) -> void:
 ## Returns true if the character is a valid starting character for a command name.
 static func __is_valid_command_start(c: String) -> bool:
 	var r := RegEx.new()
-	r.compile("[a-z_]")
+	r.compile("[a-z_+-]")
 	return !!r.search(c.to_lower())

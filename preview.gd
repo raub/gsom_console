@@ -4,13 +4,19 @@ extends Control
 @onready var __plaquePanel: GsomPlaquePanel = $GsomPlaquePanel
 @onready var __buttonConsole: Button = $VBoxContainer/HBoxContainer/Console
 @onready var __buttonPlaque: Button = $VBoxContainer/HBoxContainer/Plaque
+@onready var __actor: ColorRect = $Area/Actor
+@onready var __area: ColorRect = $Area
 
 
 func _ready() -> void:
-	InputMap.add_action("Console")
-	var key_lquo := InputEventKey.new()
-	key_lquo.keycode = KEY_QUOTELEFT
-	InputMap.action_add_event("Console", key_lquo)
+	GsomConsole.register_action("move_up")
+	GsomConsole.register_action("move_down")
+	GsomConsole.register_action("move_left")
+	GsomConsole.register_action("move_right")
+	GsomConsole.register_cmd("recolor")
+	
+	GsomConsole.submit("exec preview")
+	GsomConsole.called_cmd.connect(__handle_commands)
 	
 	GsomConsole.register_cvar("test1", 1.0, "Test CVAR 1.")
 	GsomConsole.register_cvar("test2", true, "Test CVAR 2.")
@@ -45,9 +51,25 @@ func _ready() -> void:
 		)
 
 
-func _input(event: InputEvent) -> void:
-	if event is InputEventKey:
-		var key_event := event as InputEventKey
-		if key_event.is_action("Console") and Input.is_action_just_pressed("Console"):
-			GsomConsole.toggle()
-			accept_event()
+func __handle_commands(cmd_name: String, args: PackedStringArray) -> void:
+	prints("cmd", cmd_name, args)
+	if cmd_name == "recolor":
+		if args.size() < 1:
+			return
+		__actor.color = Color(args[0])
+
+
+func _process(delta: float) -> void:
+	var dir := Vector2()
+	dir.x += 1 if GsomConsole.read_action("move_right") else 0
+	dir.x -= 1 if GsomConsole.read_action("move_left") else 0
+	dir.y += 1 if GsomConsole.read_action("move_down") else 0
+	dir.y -= 1 if GsomConsole.read_action("move_up") else 0
+	
+	var new_pos := __actor.position + dir.normalized() * delta * 100
+	
+	__actor.position = new_pos.clamp(Vector2(), __area.size - __actor.size)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	GsomConsole.handle_input(event)

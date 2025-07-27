@@ -24,6 +24,12 @@ var __intercepted: Dictionary[String, String] = {
 	"condump": "Dumps all the console content into a text file. Takes filename as an optional parameter.",
 	"open_user": "Opens the platform-specific location of the `user://` directory. Optionally accepts additional path.",
 	"clear": "Clears the console output.",
+	"list_bound_commands": "Shows currently bound inputs. Either all, or filtered, if query arguments presend: `list_bound_commands w a s d`.",
+	"list_bind_names": "List all available input names, or a filtered subset.",
+	"bind": "Assign input name to commands or actions. Pass input name and then a valid console command: `bind w +forward` or `bind x \"say hi;wait;say bye\"`.",
+	"unbind": "Erase the bound command text for a given input name: `unbind w` - pressing W does nothing after that.",
+	"unbindall": "Erase all the command binds.",
+	"toggle_console": "Toggles the console UI on or off (based on built-in state).",
 }
 
 
@@ -55,13 +61,19 @@ func intercept(ast: PackedStringArray) -> bool:
 		"condump": __cmd_condump(args)
 		"open_user": __cmd_open_user(args)
 		"clear": __cmd_clear()
+		"list_bound_commands": __cmd_list_bound_commands(args)
+		"list_bind_names": __cmd_list_bind_names()
+		"bind": __cmd_bind(args)
+		"unbind": __cmd_unbind(args)
+		"unbindall": __cmd_unbindall()
+		"toggle_console": __cmd_toggle_console()
 		_: pass
 	
 	if __has_alias(cmd_name):
 		if args.size() > 1:
-			GsomConsole.submit("%s %s" % [__aliases[cmd_name], " ".join(args)], false)
+			GsomConsole.submit("%s %s" % [__aliases[cmd_name], " ".join(args)])
 		else:
-			GsomConsole.submit(__aliases[cmd_name], false)
+			GsomConsole.submit(__aliases[cmd_name])
 		return true
 	
 	return __intercepted.has(cmd_name)
@@ -174,7 +186,7 @@ func __cmd_ifvi(args: PackedStringArray) -> void:
 		_: GsomConsole.warn("Unknown comparison operator '%s'." % args[1])
 	
 	if cmp_result:
-		GsomConsole.submit(" ".join(args.slice(3)), false)
+		GsomConsole.submit(" ".join(args.slice(3)))
 
 func __cmd_ifvv(args: PackedStringArray) -> void:
 	if args.size() < 4:
@@ -205,7 +217,7 @@ func __cmd_ifvv(args: PackedStringArray) -> void:
 		_: GsomConsole.warn("Unknown comparison operator '%s'." % args[1])
 	
 	if cmp_result:
-		GsomConsole.submit(" ".join(args.slice(3)), false)
+		GsomConsole.submit(" ".join(args.slice(3)))
 
 
 func __cmd_inc(args: PackedStringArray) -> void:
@@ -322,6 +334,59 @@ func __cmd_open_user(args: PackedStringArray) -> void:
 func __cmd_clear() -> void:
 	GsomConsole.clear()
 
+func __cmd_list_bound_commands(args: PackedStringArray) -> void:
+	var result: PackedStringArray = []
+	var showUnbound: bool = args.size() > 0
+	
+	var input_names = (
+		Array(args) if args.size() else GsomConsole.io_manager.get_input_names()
+	)
+	
+	for input_name: String in input_names:
+		var color: String = __get_help_color()
+		var bound: String = GsomConsole.io_manager.get_command_by_name(input_name)
+		if bound:
+			result.append(__color(color, "[b]%s[/b] - \"%s\"." % [input_name, bound]))
+		elif showUnbound:
+			result.append(__color(
+				GsomConsole.COLOR_SECONDARY,
+				"[b]%s[/b] - [lb]Not bound[rb]." % input_name,
+			))
+	
+	if !result.size():
+		GsomConsole.log("Currently, no inputs are bound.")
+	else:
+		GsomConsole.log("\n".join(result))
+
+func __cmd_list_bind_names() -> void:
+	var result: PackedStringArray = []
+	var input_list = GsomConsole.io_manager.get_input_names()
+	
+	for input_name: String in input_list:
+		var color: String = __get_help_color()
+		result.append(__color(color, input_name))
+	
+	GsomConsole.log(" ".join(result))
+
+
+func __cmd_bind(args: PackedStringArray) -> void:
+	if args.size() < 2:
+		GsomConsole.warn("Syntax requires 3 or more args: `bind w +forward` or `bind x say hi`.")
+		return
+	
+	GsomConsole.io_manager.bind_input(args[0], " ".join(args.slice(1)))
+
+func __cmd_unbind(args: PackedStringArray) -> void:
+	if args.size() < 1:
+		GsomConsole.warn("Syntax requires 2 or more args: `unbind w` or `unbind f1`.")
+		return
+	GsomConsole.io_manager.unbind_input(args[0])
+
+func __cmd_unbindall() -> void:
+	GsomConsole.io_manager.unbind_all_inputs()
+
+func __cmd_toggle_console() -> void:
+	GsomConsole.toggle()
 
 func __cmd_exec(args: PackedStringArray) -> void:
 	if !args.size():
@@ -465,7 +530,7 @@ func __search_and_exec(exec_name: String) -> void:
 		if multi_line.ends_with("\\"): # merge with next line
 			multi_line = multi_line.rstrip("\\")
 		else:
-			GsomConsole.submit(multi_line, false)
+			GsomConsole.submit(multi_line)
 			multi_line = ""
 	file.close()
 
@@ -486,7 +551,6 @@ func __get_builtin_help(name: String) -> String:
 	return ""
 
 func __cmd_find(args: PackedStringArray) -> void:
-	var i: int = 0
 	var result: PackedStringArray = []
 	
 	# `fund query` - query required
@@ -507,7 +571,6 @@ func __cmd_find(args: PackedStringArray) -> void:
 	
 
 func __cmd_help(args: PackedStringArray) -> void:
-	var i: int = 0
 	var result: PackedStringArray = []
 	
 	# `help [name1 name2 ...]` syntax
@@ -535,7 +598,7 @@ func __cmd_help(args: PackedStringArray) -> void:
 					__color(GsomConsole.COLOR_ERROR, "[b]%s[/b] - No such command/variable.\n" % arg)
 				)
 		
-		GsomConsole.log("".join(PackedStringArray(result)))
+		GsomConsole.log("".join(result))
 		return
 	
 	__append_builtin_list(result)
@@ -624,6 +687,10 @@ func alias(alias_name: String, alias_text: String = "") -> void:
 	
 	if GsomConsole.has_key(alias_name) and !__has_alias(alias_name):
 		GsomConsole.warn("Alias name '%s' not available." % alias_name)
+		return
+	
+	if alias_name[0] == "+" or alias_name[0] == "-":
+		GsomConsole.io_manager.alias(alias_name, alias_text)
 		return
 	
 	if alias_text:

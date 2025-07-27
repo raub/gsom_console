@@ -101,6 +101,31 @@ var __cmds: Dictionary[String, Dictionary] = {}
 var __next: Array[Array] = []
 var __help_color_idx: int = 0
 
+#region Input
+
+func handle_input(event: InputEvent) -> void:
+	io_manager.handle_input(event)
+
+func register_action(action_name: String) -> void:
+	io_manager.register_action(action_name)
+
+func erase_action(action_name: String) -> void:
+	io_manager.erase_action(action_name)
+
+func read_action(action_name: String) -> bool:
+	return io_manager.read_action(action_name)
+
+func bind_input(input_name: String, command: String) -> void:
+	io_manager.bind_input(input_name, command)
+
+func unbind_input(input_name: String) -> void:
+	io_manager.unbind_input(input_name)
+
+func unbind_all_inputs() -> void:
+	io_manager.unbind_all_inputs()
+
+#endregion
+
 #region CVARs
 
 ## Makes a new CVAR available with default value and optional help note.
@@ -294,7 +319,7 @@ func toggle() -> void:
 #region Submit
 
 ## Submit user input for parsing.
-func submit(expression: String, track_history: bool = true) -> void:
+func submit(expression: String, track_history: bool = false) -> void:
 	if track_history:
 		self.log("%s %s" % [__color(COLOR_SECONDARY, "\n>"), expression])
 	
@@ -306,7 +331,7 @@ func submit(expression: String, track_history: bool = true) -> void:
 	if track_history:
 		push_history(expression.strip_edges())
 	
-	__submit_ast(parsed.ast)
+	submit_ast(parsed.ast)
 
 
 func push_history(expression: String) -> void:
@@ -317,7 +342,7 @@ func push_history(expression: String) -> void:
 	__history.append(expression)
 
 
-func __submit_ast(ast: Array[PackedStringArray]) -> void:
+func submit_ast(ast: Array[PackedStringArray]) -> void:
 	for i: int in ast.size():
 		var part: PackedStringArray = ast[i]
 		if part[0] == CMD_WAIT:
@@ -396,7 +421,7 @@ func tick() -> void:
 	__next = []
 	
 	for ast: Array[PackedStringArray] in _prev:
-		__submit_ast(ast)
+		submit_ast(ast)
 
 
 func _process(_delta: float) -> void:
