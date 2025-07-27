@@ -52,7 +52,6 @@ func _ready() -> void:
 
 
 func __handle_commands(cmd_name: String, args: PackedStringArray) -> void:
-	prints("cmd", cmd_name, args)
 	if cmd_name == "recolor":
 		if args.size() < 1:
 			return

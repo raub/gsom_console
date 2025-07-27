@@ -260,7 +260,6 @@ func handle_action(ast: Array, event_state: bool) -> void:
 		var first: String = part[0]
 		
 		if first[0] == "+":
-			prints("ali+", first, ast)
 			var action: String = first.substr(1)
 			if __base_actions.has(action):
 				__base_actions[action] = event_state
@@ -276,7 +275,6 @@ func handle_action(ast: Array, event_state: bool) -> void:
 				GsomConsole.error("Unknown action `%s`." % action)
 				continue
 		elif first[0] == "-":
-			prints("ali-", first, ast)
 			var action: String = first.substr(1)
 			if __base_actions.has(action):
 				__base_actions[action] = !event_state
@@ -288,8 +286,7 @@ func handle_action(ast: Array, event_state: bool) -> void:
 				GsomConsole.error("Unknown action `%s`." % action)
 				continue
 		elif event_state:
-			prints("sub", event_state, ast)
-			GsomConsole.submit_ast(ast)
+			GsomConsole.submit_ast([part])
 
 
 var __label_regex: RegEx = null
