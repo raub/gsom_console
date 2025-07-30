@@ -8,20 +8,28 @@ var matched: PackedStringArray:
 # Internal storage
 var __matched: PackedStringArray = []
 
+class ScoredToken:
+	var token: String
+	var score: int
+	
+	func _init(t: String, s: int) -> void:
+		token = t
+		score = s
+
 func _init(text: String, available: PackedStringArray) -> void:
 	var query := text.to_lower()
-	var scored: Array[Dictionary] = []
+	var scored: Array[ScoredToken] = []
 	
 	for token: String in available:
 		var lower := token.to_lower()
-		var score := __get_match_score(query, lower)
+		var score: int = __get_match_score(query, lower)
 		if score >= 200:
-			scored.append({ "token": token, "score": score })
+			scored.append(ScoredToken.new(token, score))
 	
 	scored.sort_custom(__sort_descending_by_score)
 	
-	for entry: Dictionary in scored:
-		var token: String = entry["token"]
+	for entry: ScoredToken in scored:
+		var token: String = entry.token
 		__matched.append(token)
 
 
@@ -62,8 +70,8 @@ func __sequence_match_score(query: String, target: String) -> int:
 	return 400 - __length_penalty(query, target)
 
 
-static func __sort_descending_by_score(a: Dictionary, b: Dictionary) -> bool:
-	return a["score"] > b["score"]
+static func __sort_descending_by_score(a: ScoredToken, b: ScoredToken) -> bool:
+	return a.score > b.score
 
 
 func __levenshtein(a: String, b: String) -> int:

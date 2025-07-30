@@ -35,12 +35,32 @@ const TextMatcher := preload('./tools/text_matcher.gd')
 const Interceptor := preload('./tools/interceptor.gd')
 const IoManager := preload('./tools/io_manager.gd')
 
-const __TYPE_NAMES: Dictionary = {
+const __TYPE_NAMES: Dictionary[int, String] = {
 	TYPE_BOOL: "bool",
 	TYPE_INT: "int",
 	TYPE_FLOAT: "float",
 	TYPE_STRING: "String",
 }
+
+
+class CvarDesc:
+	var value: Variant
+	var help: String
+	var hint: String
+	var is_frozen: bool
+	
+	func _init(v: Variant, h: String) -> void:
+		value = v
+		help = h if !h.is_empty() else "[No description]."
+		hint = ""
+		is_frozen = false
+
+class CmdDesc:
+	var help: String
+	
+	func _init(h: String) -> void:
+		help = h if !h.is_empty() else "[No description]."
+
 
 var COLORS_HELP: Array[String] = ["#d4fdeb", "#d4e6fd", "#fdd4e6", "#fdebd4"]
 var COLOR_PRIMARY: String = "#ecf4fe"
@@ -99,8 +119,8 @@ var __history: PackedStringArray = []
 		return __history
 
 
-var __cvars: Dictionary[String, Dictionary] = {}
-var __cmds: Dictionary[String, Dictionary] = {}
+var __cvars: Dictionary[String, CvarDesc] = {}
+var __cmds: Dictionary[String, CmdDesc] = {}
 var __next: Array[Array] = []
 
 #region Input
@@ -144,12 +164,7 @@ func register_cvar(cvar_name: String, value: Variant, help_text: String = "") ->
 		self.warn("CVAR: only bool, int, float, string supported.")
 		return
 	
-	__cvars[cvar_name] = {
-		"value": value,
-		"help": help_text if !help_text.is_empty() else "[No description].",
-		"hint": "",
-		"is_frozen": false,
-	}
+	__cvars[cvar_name] = CvarDesc.new(value, help_text)
 	
 	set_cvar(cvar_name, value)
 
@@ -245,9 +260,7 @@ func register_cmd(cmd_name: String, help_text: String = "") -> void:
 		self.warn("CMD name '%s' not available." % cmd_name)
 		return
 	
-	__cmds[cmd_name] = {
-		"help": help_text if !help_text.is_empty() else "[No description].",
-	}
+	__cmds[cmd_name] = CmdDesc.new(help_text)
 
 
 ## Manually call a command, as if the call was parsed from user input.
