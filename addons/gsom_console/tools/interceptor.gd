@@ -1,5 +1,9 @@
 extends RefCounted
 
+## This class incapsulates logic to handle the built-in commands.
+## You can extend it and override `GsomConsole.interceptor` to support more or fewer built-ins.
+## But that's probably not necessary under normal circumstances.
+
 var __help_color_idx: int = 0
 var __aliases: Dictionary[String, String] = {}
 
@@ -32,7 +36,9 @@ var __intercepted: Dictionary[String, String] = {
 	"toggle_console": "Toggles the console UI on or off (based on built-in state).",
 }
 
-
+## This is called for every sub-tree of the submitted command AST.
+##
+## Returning `true` means it was handled by the interceptor.
 func intercept(ast: PackedStringArray) -> bool:
 	var cmd_name: String = ast[0].to_lower()
 	
@@ -78,13 +84,13 @@ func intercept(ast: PackedStringArray) -> bool:
 	
 	return __intercepted.has(cmd_name)
 
-
+## Fetch all names posessed by this interceptor, including the alias names.
 func get_keys() -> Array[String]:
-	var keys: Array[String] = __aliases.keys();
+	var keys: Array[String] = __aliases.keys()
 	keys.append_array(__intercepted.keys())
 	return keys
 
-
+## Returns `true` if this name is occupied by interceptor.
 func has_key(key:String) -> bool:
 	return __intercepted.has(key) or __aliases.has(key)
 
@@ -508,7 +514,7 @@ func __search_and_exec(exec_name: String) -> void:
 
 	GsomConsole.log("Executing script '[b]%s[/b]'..." % __color(GsomConsole.COLOR_VALUE, exec_name))
 	
-	var line_idx: int = 0;
+	var line_idx: int = 0
 	var multi_line: String = ""
 	
 	while !file.eof_reached():

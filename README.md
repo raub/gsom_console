@@ -81,7 +81,8 @@ It holds all the common console logic and is not tied to any specific UI.
 * `signal toggled(is_visible: bool)` - console visibility toggled.
     This is optional - if you use the default visibility logic that comes with this singleton.
 * `signal logged(rich_text: String)` - a log string was added. Only the latest addition
-    is passed to the signal. The whole log text is available as `log_text` prop.
+    is passed to the signal. The argument contains the added text as-is, including the newline.
+* `signal cleared()` - Cleared the console output by a call to `clear()`.
 
 **Properties**
 
@@ -187,12 +188,12 @@ Shortcuts for `GsomConsole.io_manager`.
 * `unbind_input(input_name: String) -> void` - Clears the bound command for the given input name.
 * `unbind_all_inputs() -> void` - Clears all bound commands.
 
-**Other Types**
+**Types**
 
 * `class GsomConsole.CommonUi` - Incapsulates common UI logic - you can use it for custom console windows.
 * `class GsomConsole.AstParser` - Validates (the syntax of) console commands and parses them into AST.
-* `class GsomConsole.TextMatcher` - Finds "similar" commands (for hints or built-in "find x")
-* `class GsomConsole.Interceptor` - Handles the built-in commands
+* `class GsomConsole.TextMatcher` - Finds "similar" commands (for hints or built-in "find x").
+* `class GsomConsole.Interceptor` - Handles the built-in commands.
 * `class GsomConsole.IoManager` - Half-Life like input handler to support "bind" and other input features.
 * `class GsomConsole.CvarDesc` - Type declaration for CVAR data entry.
 * `class GsomConsole.CmdDesc` - Type declaration for CMD data entry.

@@ -1,5 +1,8 @@
 extends RefCounted
 
+## Finds "similar" commands (for hints or built-in "find x").
+## It uses a variation of score-based fuzzy search.
+
 ## Read-only match result
 var matched: PackedStringArray:
 	get:

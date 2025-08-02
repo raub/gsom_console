@@ -10,7 +10,7 @@ extends RefCounted
 var ast: Array[PackedStringArray]:
 	get: return __ast.duplicate()
 
-## Empty string means no error; otherwise contains description of the parse error.
+## Empty string means no error. Otherwise contains description of the parse error.
 var error: String:
 	get: return __error
 

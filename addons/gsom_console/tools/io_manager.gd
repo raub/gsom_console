@@ -1,5 +1,9 @@
 extends RefCounted
 
+## Half-Life like input handler to support "bind" and other input features.
+## It only works when you manually call `handle_input` (or `handle_action`).
+## It doesn't listen to input events on its own.
+
 # such as "forward", "jump" - tracks activity of the action
 var __base_actions: Dictionary[String, bool] = {}
 

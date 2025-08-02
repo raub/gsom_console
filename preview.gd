@@ -1,9 +1,9 @@
 extends Control
 
-@onready var __consolePanel: GsomConsolePanel = $GsomConsolePanel
-@onready var __plaquePanel: GsomPlaquePanel = $GsomPlaquePanel
-@onready var __buttonConsole: Button = $VBoxContainer/HBoxContainer/Console
-@onready var __buttonPlaque: Button = $VBoxContainer/HBoxContainer/Plaque
+@onready var __console_panel: GsomConsolePanel = $GsomConsolePanel
+@onready var __plaque_panel: GsomPlaquePanel = $GsomPlaquePanel
+@onready var __button_console: Button = $VBoxContainer/HBoxContainer/Console
+@onready var __button_plaque: Button = $VBoxContainer/HBoxContainer/Plaque
 @onready var __actor: ColorRect = $Area/Actor
 @onready var __area: ColorRect = $Area
 
@@ -29,18 +29,18 @@ func _ready() -> void:
 	GsomConsole.log("Hello World.")
 	GsomConsole.log("You can try [b]exec example[/b] (see res://example.cfg).")
 	
-	if __consolePanel:
-		__consolePanel.is_disabled = !__buttonConsole.button_pressed
-		__buttonConsole.toggled.connect(
+	if __console_panel:
+		__console_panel.is_disabled = !__button_console.button_pressed
+		__button_console.toggled.connect(
 			func (is_on: bool) -> void:
-				__consolePanel.is_disabled = !is_on
+				__console_panel.is_disabled = !is_on
 		)
 	
-	if __plaquePanel:
-		__plaquePanel.is_disabled = !__buttonPlaque.button_pressed
-		__buttonPlaque.toggled.connect(
+	if __plaque_panel:
+		__plaque_panel.is_disabled = !__button_plaque.button_pressed
+		__button_plaque.toggled.connect(
 			func (is_on: bool) -> void:
-				__plaquePanel.is_disabled = !is_on
+				__plaque_panel.is_disabled = !is_on
 		)
 
 
