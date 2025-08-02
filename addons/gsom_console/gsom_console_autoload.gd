@@ -321,14 +321,14 @@ func list_cmds() -> Array[String]:
 	return __cmds.keys()
 
 
-## Check if there is a CMD with given name
+## Check if there is a CMD with given name.
 func has_cmd(cmd_name: String) -> bool:
 	return __cmds.has(cmd_name)
 
 #endregion
 
 
-## Check if a CMD/CVAR name is already taken
+## Check if a CMD/CVAR name is already taken.
 func has_key(key: String) -> bool:
 	return __cvars.has(key) or __cmds.has(key) or interceptor.has_key(key)
 

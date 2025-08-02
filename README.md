@@ -5,10 +5,9 @@ There is a singleton, and optional UI (that doesn't autoload).
 It's also possible to craft your own UI instead.
 Future versions may provide additional UI implementations as well.
 
-The core idea: you have CVARs (console variables) and CMDs (commands).
+Implements variables, commands, aliases, input, etc.
 You can use CVARs as global variables and settings. CMDs are like global events/signals.
-
-There are special built-in commands like `alias`, `exec`, `wait`, `echo`, `map`, `quit`.
+There are useful built-in commands as described below.
 
 See [example](preview.gd) script.
 
@@ -38,23 +37,35 @@ doesn't do anything specific per CMD call - only emits the `called_cmd` signal.
 
 * `;` - not exactly a command, but a way to write multiple commands into one line.
     Even more useful in context of **alias**. E.g. `alias x "echo hi; alias x echo bye"`.
-* `help [name1, name2, ...]` - collect and display the currently available aliases,
-    CVARs, and CMDs. If any optional parameters `nameN` are provided, the console will
-    only display the matching info.
-* `exec name[.ext]` - executes a config script line-by-line.
-* `alias [name, "any text"]` - without arguments it will list all available aliases.
-    If only name is given, it will erase the alias. If the alias text is also provided,
-    then it will be stored for future use under that name.
-* `echo "any text"; echo any text` - logs back the given text or multiple arguments.
-* `map [name]` - if called without arguments, shows the current scene name. With an argument,
-    it will try to change scene to the given one (by path). E.g. `map a/b/c` -> change
-    scene to `res://a/b/c.tscn`. The `.tscn` suffix is optional for this command.
-* `mainscene` - immediately switch to the project's main scene, as per project settings.
-* `quit` - immediately closes the application.
 * `wait` - a special command to postpone the execution by 1 tick. This makes most sense
     together with `alias` and some frame-by-frame logic. For example,
     `cmd1; wait; cmd2` - the two commands will be executed on different frames.
-
+* `alias` - Create a named shortcut for any input text. Use `alias say echo` or `alias smile \"echo :)\"`.
+* `bind` - Assign input name to commands or actions. Pass input name and then a valid console command: `bind w +forward` or `bind x \"say hi;wait;say bye\"`.
+* `clear` - Clears the console output.
+* `condump` - Dumps all the console content into a text file. Takes filename as an optional parameter.
+* `dec` - Decrements CVAR value by -1, -1.0, false, 1-char (depending on type), or your custom values. Use `dec x` or `dec s xyz`.
+* `echo` - Print back any input. Use `echo text1 2 3` or `echo \"text1 2 3\".`
+* `exec` - Parse and execute commands line by line from a file. Use `exec my_conf` or `exec user.cfg`.
+* `find` - Find matching symbols - similar to how hints work. Use `find ec` or find `it`.
+* `greet` - Show introduction/greeting message. Use `greet \"Your message here\"`.
+* `help` - Display available commands and variables. Use `help name1 name2` or `help`.
+* `ifvi` - Takes 4+ args: variable, cmp, immediate, ...action. Cmp is one of: ==,!=,>,>=,<,<=. E.g.: `ifvi x == 10 echo x is 10`. True > false, string comparison rules apply too.
+* `ifvv` - Takes 4+ args: variable1, cmp, variable2, ...action. Cmp is one of: ==,!=,>,>=,<,<=. E.g.: `ifvv var1 < var2 \"alias out echo var1\"`.
+* `inc` - Increments CVAR value by 1, 1.0, true, ' ' (depending on type), or your custom values. Use `inc x` or `inc s abcd`.
+* `list_bind_names` - List all available input names, or a filtered subset.
+* `list_bound_commands` - Shows currently bound inputs. Either all, or filtered, if query arguments presend: `list_bound_commands w a s d`.
+* `mainscene` - Reload the main scene (as in project settings).
+* `map` - Switch to a scene by path, or show path to the current one. Use `map test` or `map scenes/test.tscn`.
+* `open_user` - Opens the platform-specific location of the `user://` directory. Optionally accepts additional path.
+* `quit` - Close the application, exit to desktop.
+* `set` - Explicit notation of CVAR assignment. Syntax `set x 1` is equal to `x 1` if `x` is a CVAR. And this will only work on a CVAR.
+* `toggle_console` - Toggles the console UI on or off (based on built-in state).
+* `toggle` - Toggles a CVAR - `toggle x`. Rules are: `true<->false; 1<->0; +f<->-f; ''/'no'<->'yes'/'...'`.
+* `unbind` - Erase the bound command text for a given input name: `unbind w` - pressing W does nothing after that.
+* `unbindall` - Erase all the command binds.
+* `write_cvars` - Save a script file with all or specific CVARs. Use `write_cvars my_conf x y z` or `write_cvars user.cfg`
+* `write_groups` - Save a script file with all or specific groups of symbols - cvar, alias, bind. Use `write_groups my_conf alias bind` or `write_groups user.cfg`
 
 ## GsomConsole
 
@@ -74,8 +85,6 @@ It holds all the common console logic and is not tied to any specific UI.
 
 **Properties**
 
-* `CommonUi` - common UI logic reusable for console-like components.
-* `AstParser` - helper class to parse console commands into ASTs.
 * `tick_mode: TickMode` - default `TickMode.TICK_MODE_AUTO`,
     the mode of calling postponed (by `wait`) commands. By default, it happens every
     frame automatically. But you can seize manual control over this process.
@@ -107,38 +116,87 @@ It holds all the common console logic and is not tied to any specific UI.
 * `EXEC_EXT: String` - default `".cfg"`, used to facilitate the search for config scripts
     by automatically checking the provided path with this suffix.
 
-
-**Methods**
+**CVAR Methods**
 
 * `register_cvar(cvar_name: String, value: Variant, help_text: String = "") -> void` - makes a new
     CVAR available with default value and optional help note.
-* `register_cmd(cmd_name: String, help_text: String = "") -> void` - makes a new
-    CMD available with an optional help note.
-* `alias(alias_name: String, alias_text: String = "") -> void` - makes a new
-    ALIAS available, or removes an existing one if `alias_text` is empty.
-* `call_cmd(cmd_name: String, args: PackedStringArray) -> void` - manually call a command,
-    as if the call was parsed from user input.
 * `set_cvar(cvar_name: String, value: Variant) -> void` - assign new value to the CVAR.
 * `get_cvar(cvar_name: String) -> Variant` - inspect the current CVAR value.
 * `list_cvars() -> Array` - list all CVAR names.
 * `has_cvar(cvar_name: String) -> bool` - check if there is a CVAR with given name.
+* `convert_value(value_type: int, new_value: String) -> Variant` - Converts strings to other supported console types (use `Variant.Type`).
+* `show_cvar(cvar_name: String) -> void` - Displays a CVAR (type and value) through console log.
+* `freeze_cvar(cvar_name: String, is_frozen: bool = true) -> void` - Sets CVAR to read-only state.
+* `get_cvar_help(cvar_name: String) -> String` - Fetch CVAR help text.
+
+**CMD Methods**
+
+* `register_cmd(cmd_name: String, help_text: String = "") -> void` - makes a new
+    CMD available with an optional help note.
+* `call_cmd(cmd_name: String, args: PackedStringArray) -> void` - manually call a command,
+    as if the call was parsed from user input.
 * `has_cmd(cmd_name: String) -> bool` - check if there is a CMD with given name.
+* `get_cmd_help(cmd_name: String) -> String` - Fetch CMD help text.
+* `list_cmds() -> Array[String]` - List all CMD names.
+* `has_cmd(cmd_name: String) -> bool` - Check if there is a CMD with given name.
+
+**Console Methods**
+
+* `alias(alias_name: String, alias_text: String = "") -> void` - makes a new
+    ALIAS available, or removes an existing one if `alias_text` is empty.
 * `has_alias(alias_name: String) -> bool` - check if there is an ALIAS with given name.
+* `has_key(key: String) -> bool` - Check if a CMD/CVAR name is already taken.
 * `get_matches(text: String) -> PackedStringArray` - get a list of CVAR and CMD
     names that start with the given `text`.
 * `tick() -> void` - calls the enqueued by "wait" commands, if any. By default
     it is called automatically every frame.
+* `submit(expression: String) -> void` - submit user input for parsing.
+* `push_history(expression: String) -> void` - Adds a history item to previously accepted commands.
+* `submit_ast(ast: Array[PackedStringArray]) -> void` - Same as submit, but takes pre-parsed AST.
+
+**Logging Methods**
+
+* `log(msg: String) -> void` - Appends `msg` to `log_text` and emits `logged`.
+* `info(msg: String) -> void` - Wraps `msg` with color BBCode and calls `log`.
+* `debug(msg: String) -> void` - Wraps `msg` with color BBCode and calls `log`.
+* `warn(msg: String) -> void` - Wraps `msg` with color BBCode and calls `log`.
+* `error(msg: String) -> void` - Wraps `msg` with color BBCode and calls `log`.
+* `clear() -> void` - Crears the output logs and emits `cleared`.
+
+**Visibility Methods**
+
 * `hide() -> void` - set `is_visible` to `false` if it was `true`.
     Only emits `toggled` if indeed changed.
 * `show() -> void` - set `is_visible` to `true` if it was `false`.
     Only emits `toggled` if indeed changed.
 * `toggle() -> void` - change the `is_visible` value to the opposite and emits `toggled`.
-* `submit(expression: String) -> void` - submit user input for parsing.
-* `log(msg: String) -> void` - appends `msg` to `log_text` and emits `logged`.
-* `info(msg: String) -> void` - wraps `msg` with color BBCode and calls `log`.
-* `debug(msg: String) -> void` - wraps `msg` with color BBCode and calls `log`.
-* `warn(msg: String) -> void` - wraps `msg` with color BBCode and calls `log`.
-* `error(msg: String) -> void` - wraps `msg` with color BBCode and calls `log`.
+
+**Input Methods**
+
+Shortcuts for `GsomConsole.io_manager`.
+
+* `handle_input(event: InputEvent) -> void` - Passes input events into the input manager instance.
+* `register_action(action_name: String) -> void` - Registers a new action name for your game.
+* `erase_action(action_name: String) -> void` - Removes a previously registered game action by name.
+* `read_action(action_name: String) -> bool` - Fetch the action status by name - pressed or not.
+* `bind_input(input_name: String, command: String) -> void` - Binds any console command to the given input name.
+    An input name is always bound to only 1 command.
+    If you need multiple things per input - use ";" or "alias".
+    - With ";" - `bind x "+jump; say hello; say there"`.
+    - With "alias" - `alias +greet "+jump; say hello; say there"; bind x +greet`.
+* `unbind_input(input_name: String) -> void` - Clears the bound command for the given input name.
+* `unbind_all_inputs() -> void` - Clears all bound commands.
+
+**Other Types**
+
+* `class GsomConsole.CommonUi` - Incapsulates common UI logic - you can use it for custom console windows.
+* `class GsomConsole.AstParser` - Validates (the syntax of) console commands and parses them into AST.
+* `class GsomConsole.TextMatcher` - Finds "similar" commands (for hints or built-in "find x")
+* `class GsomConsole.Interceptor` - Handles the built-in commands
+* `class GsomConsole.IoManager` - Half-Life like input handler to support "bind" and other input features.
+* `class GsomConsole.CvarDesc` - Type declaration for CVAR data entry.
+* `class GsomConsole.CmdDesc` - Type declaration for CMD data entry.
+* `enum GsomConsole.TickMode` - Determines how the postponed commands are handled.
 
 
 ## GsomConsolePanel
@@ -233,9 +291,9 @@ The development focus of this plugin is following:
 
 **Input and Binding Integration**
 
-- [ ] Keybinding support via `bind`, `unbind`, `unbindall`
-- [ ] Modifier-aware input - `+command` / `-command`
-- [ ] Multiple binds per key via aliases
+- [x] Keybinding support via `bind`, `unbind`, `unbindall`
+- [x] Modifier-aware input - `+command` / `-command`
+- [x] Multiple binds per key via aliases
 
 **Advanced Usability**
 
