@@ -28,7 +28,7 @@ var __intercepted: Dictionary[String, String] = {
 	"condump": "Dumps all the console content into a text file. Takes filename as an optional parameter.",
 	"open_user": "Opens the platform-specific location of the `user://` directory. Optionally accepts additional path.",
 	"clear": "Clears the console output.",
-	"list_bound_commands": "Shows currently bound inputs. Either all, or filtered, if query arguments presend: `list_bound_commands w a s d`.",
+	"list_bound_commands": "Shows currently bound inputs. Either all, or filtered, if query arguments present: `list_bound_commands w a s d`.",
 	"list_bind_names": "List all available input names, or a filtered subset.",
 	"bind": "Assign input name to commands or actions. Pass input name and then a valid console command: `bind w +forward` or `bind x \"say hi;wait;say bye\"`.",
 	"unbind": "Erase the bound command text for a given input name: `unbind w` - pressing W does nothing after that.",
