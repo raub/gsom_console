@@ -100,24 +100,6 @@ focus_mode = 0
 toggle_mode = true
 text = "Plaque"
 
-[node name="GsomPlaquePanel" type="Control" parent="."]
-custom_minimum_size = Vector2(0, 320)
-anchors_preset = 0
-anchor_right = 1.0
-offset_bottom = 320.0
-script = ExtResource("4_6urkv")
-metadata/_custom_type_script = "uid://mm4q1fr3n8i5"
-
-[node name="GsomConsolePanel" type="Control" parent="."]
-custom_minimum_size = Vector2(480, 320)
-anchors_preset = 0
-offset_left = 56.0
-offset_top = 323.0
-offset_right = 1059.0
-offset_bottom = 784.0
-script = ExtResource("3_n3s36")
-metadata/_custom_type_script = "uid://dtj85h6uxam0w"
-
 [node name="Area" type="ColorRect" parent="."]
 layout_mode = 0
 offset_left = 1383.0
@@ -148,3 +130,21 @@ text = "WASD
 TFGH"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="GsomPlaquePanel" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 320)
+anchors_preset = 0
+anchor_right = 1.0
+offset_bottom = 320.0
+script = ExtResource("4_6urkv")
+metadata/_custom_type_script = "uid://mm4q1fr3n8i5"
+
+[node name="GsomConsolePanel" type="Control" parent="."]
+custom_minimum_size = Vector2(480, 320)
+anchors_preset = 0
+offset_left = 56.0
+offset_top = 323.0
+offset_right = 1059.0
+offset_bottom = 784.0
+script = ExtResource("3_n3s36")
+metadata/_custom_type_script = "uid://dtj85h6uxam0w"

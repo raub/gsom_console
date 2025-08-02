@@ -1,7 +1,7 @@
 shader_type canvas_item;
 
 uniform float blur: hint_range(0.0, 5.0) = 3.0;
-uniform vec4 color: source_color = vec4(0.0, 0.0, 0.0, 0.3);
+uniform vec4 color: source_color = vec4(0.25, 0.25, 0.25, 0.7);
 uniform sampler2D SCREEN_TEXTURE: hint_screen_texture, filter_linear_mipmap;
 
 void fragment() {
