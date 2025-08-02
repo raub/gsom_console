@@ -1,5 +1,11 @@
 extends RefCounted
 
+## This AST parser creates syntax trees for console input.
+## Simple command `a b c` -> [["a", "b", "c"]
+## Compound command `a b c; d e f` -> [["a", "b", "c"], ["d", "e", "f"]]
+## With string `a "b c"` -> [["a", "b c"]]
+## Basically, it always produces an array of arrays. Always 2 layers deep.
+
 ## Parsed abstract syntax tree result.
 var ast: Array[PackedStringArray]:
 	get: return __ast.duplicate()
@@ -12,7 +18,7 @@ var error: String:
 var __ast: Array[PackedStringArray] = []
 var __error: String = ""
 
-## Parses the command line string into AST on creation.
+## Parses the command line string into AST upon creation.
 func _init(input: String) -> void:
 	input = input.strip_edges()
 	if input.is_empty():
@@ -23,7 +29,7 @@ func _init(input: String) -> void:
 		__error = "Command must start with a letter or underscore."
 		return
 
-	var current_command: PackedStringArray = []
+	var current_command := PackedStringArray()
 	var current_token := ""
 	var inside_quotes := false
 	var i := 0

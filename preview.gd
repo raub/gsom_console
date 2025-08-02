@@ -9,14 +9,12 @@ extends Control
 
 
 func _ready() -> void:
+	GsomConsole.called_cmd.connect(__handle_commands)
+	
 	GsomConsole.register_action("move_up")
 	GsomConsole.register_action("move_down")
 	GsomConsole.register_action("move_left")
 	GsomConsole.register_action("move_right")
-	GsomConsole.register_cmd("recolor")
-	
-	GsomConsole.submit("exec preview")
-	GsomConsole.called_cmd.connect(__handle_commands)
 	
 	GsomConsole.register_cvar("test1", 1.0, "Test CVAR 1.")
 	GsomConsole.register_cvar("test2", true, "Test CVAR 2.")
@@ -24,15 +22,10 @@ func _ready() -> void:
 	GsomConsole.register_cvar("test4", "hello", "Test CVAR 4.")
 	GsomConsole.register_cvar("test5", -10, "Test CVAR 5.")
 	
+	GsomConsole.register_cmd("recolor", "Changes the color of the example rectangle.")
 	GsomConsole.register_cmd("do_something", "Test CMD.")
 	
-	GsomConsole.called_cmd.connect(
-		func (cmd_name: String, args: PackedStringArray) -> void:
-			if cmd_name == "do_something":
-				prints("do_something:", args)
-				GsomConsole.info("do_something: %s" % str(args))
-	)
-	
+	GsomConsole.submit("exec preview")
 	GsomConsole.log("Hello World.")
 	GsomConsole.log("You can try [b]exec example[/b] (see res://example.cfg).")
 	
@@ -52,6 +45,9 @@ func _ready() -> void:
 
 
 func __handle_commands(cmd_name: String, args: PackedStringArray) -> void:
+	if cmd_name == "do_something":
+		prints("do_something:", args)
+		GsomConsole.info("do_something: %s" % str(args))
 	if cmd_name == "recolor":
 		if args.size() < 1:
 			return

@@ -1,9 +1,13 @@
 extends RefCounted
 
-var __is_hint: bool = false
-var __list_hint: PackedStringArray = []
-var __is_history: bool = false
-var __index: int = 0
+## This class incapsulates the common UI logic applicable to most
+## console window implementations. It handles visibility, text
+## IO and hints.
+
+var __is_hint := false
+var __list_hint := PackedStringArray()
+var __is_history := false
+var __index := 0
 
 var __container: Control = null
 var __label_log: RichTextLabel = null
@@ -13,14 +17,23 @@ var __edit_cmd: LineEdit = null
 var __container_hint: Control = null
 var __column_hint: Control = null
 
-
+## Each of the parameters can accept `null`
 func _init(
+	## The console container element - used to handle
+	## keyboard when the input is not in focus.
 	container: Control,
+	## The output label where all console log output is dumped into.
 	label_log: RichTextLabel,
+	## The button which closes the console (`GsomConsole.hide`).
 	button_close: Button,
+	## The button to submit the input - same as pressing ENTER
 	button_submit: Button,
+	## The input line from which to read user commands.
 	edit_cmd: LineEdit,
+	## Container that wraps hints - utilized to show/hide them as necessary.
 	container_hint: Control,
+	## The direct parent of hint buttons.
+	## The children will be read and manipulated from here.
 	column_hint: Control,
 ) -> void:
 	__container = container
@@ -61,8 +74,10 @@ func _init(
 		__handle_text_change(__edit_cmd.text)
 	
 	if __column_hint:
-		for child: Button in __column_hint.get_children():
-			child.pressed.connect(__handle_hint_button.bind(child))
+		for child: Node in __column_hint.get_children():
+			if child is Button:
+				var button: Button = child
+				button.pressed.connect(__handle_hint_button.bind(button))
 
 
 #region Console Input Handlers

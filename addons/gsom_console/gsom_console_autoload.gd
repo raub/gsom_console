@@ -12,13 +12,13 @@ signal changed_cvar(cvar_name: String)
 signal called_cmd(cmd_name: String, args: PackedStringArray)
 
 ## Console visibility toggled.
-## 
+##
 ## This is for UI that wants to use the default visibility logic.
 ## E.g. the UI that is available by default with this addon.
 signal toggled(is_visible: bool)
 
 ## A log string was added.
-## 
+##
 ## Only the latest addition is passed to the signal.
 ## The whole log text is available as `log_text` prop.
 ## The argument contains the added text as-is, including the newline.
@@ -29,10 +29,15 @@ signal logged(rich_text: String)
 ## This is to be handled separately (by UIs) because the change is not incremental.
 signal cleared()
 
+## Incapsulates common UI logic - you can use it for custom console windows.
 const CommonUi := preload('./tools/common_ui.gd')
+## Validates (the syntax of) console commands and parses them into AST.
 const AstParser := preload('./tools/ast_parser.gd')
+## Finds "similar" commands (for hints or built-in "find x")
 const TextMatcher := preload('./tools/text_matcher.gd')
+## Handles the built-in commands
 const Interceptor := preload('./tools/interceptor.gd')
+## Half-Life like input handler to support "bind" and other input features.
 const IoManager := preload('./tools/io_manager.gd')
 
 const __TYPE_NAMES: Dictionary[int, String] = {
@@ -42,7 +47,7 @@ const __TYPE_NAMES: Dictionary[int, String] = {
 	TYPE_STRING: "String",
 }
 
-
+## Type declaration for CVAR data entry
 class CvarDesc:
 	var value: Variant
 	var help: String
@@ -55,28 +60,42 @@ class CvarDesc:
 		hint = ""
 		is_frozen = false
 
+## Type declaration for CMD data entry
 class CmdDesc:
 	var help: String
 	
 	func _init(h: String) -> void:
 		help = h if !h.is_empty() else "[No description]."
 
-
+## For all list outputs these colors can be conveniently cycled through
 var COLORS_HELP: Array[String] = ["#d4fdeb", "#d4e6fd", "#fdd4e6", "#fdebd4"]
+## Main output color (not default though, default is none)
 var COLOR_PRIMARY: String = "#ecf4fe"
+## Auxilary output color
 var COLOR_SECONDARY: String = "#a3b0c7"
+## Extra color for type names
 var COLOR_TYPE: String = "#95c1fb"
+## Auxilary color for values
 var COLOR_VALUE: String = "#f6d386"
+## Color for the "info" level logs
 var COLOR_INFO: String = "#a29cf5"
+## Color for the "debug" level logs
 var COLOR_DEBUG: String = "#c3e2e5"
+## Color for the "warn" level logs
 var COLOR_WARN: String = "#f89d2c"
+## Color for the "error" level logs
 var COLOR_ERROR: String = "#ff3c2c"
 
+## The special character to seperate commands within a single line.
 var CMD_SEPARATOR: String = ";"
+## The special command to postpone the execution by 1 tick.
 var CMD_WAIT: String = "wait"
+## Default file extension for config scripts.
 var EXEC_EXT: String = ".cfg"
 
+## An instance of Interceptor that handles built-in command.
 var interceptor: Interceptor = Interceptor.new()
+## An instance of input manager that handles binds and other input logic.
 var io_manager: IoManager = IoManager.new()
 
 var __log_text: String = ""
@@ -87,8 +106,11 @@ var __log_text: String = ""
 	set(v):
 		__log_text = v
 
+## Determines how the postponed commands are handled.
 enum TickMode {
+	## GsomConsole will automatically call `tick()` every frame.
 	TICK_MODE_AUTO,
+	## You ar to call `tick()` as necessary, no automatic calls.
 	TICK_MODE_MANUAL,
 }
 
@@ -125,24 +147,36 @@ var __next: Array[Array] = []
 
 #region Input
 
+## Passes input events into the input manager instance.
 func handle_input(event: InputEvent) -> void:
 	io_manager.handle_input(event)
 
+## Registers a new action name for your game.
 func register_action(action_name: String) -> void:
 	io_manager.register_action(action_name)
 
+## Removes a previously registered game action by name.
 func erase_action(action_name: String) -> void:
 	io_manager.erase_action(action_name)
 
+## Fetch the action status by name - pressed or not.
 func read_action(action_name: String) -> bool:
 	return io_manager.read_action(action_name)
 
+## Binds any console command to the given input name.
+##
+## An input name is always bound to only 1 command.
+## If you need multiple things per input - use ";" or "alias".
+## With ";" - `bind x "+jump; say hello; say there"`.
+## With "alias" - `alias +greet "+jump; say hello; say there"; bind x +greet`.
 func bind_input(input_name: String, command: String) -> void:
 	io_manager.bind_input(input_name, command)
 
+## Clears the bound command for the given input name.
 func unbind_input(input_name: String) -> void:
 	io_manager.unbind_input(input_name)
 
+## Clears all bound commands.
 func unbind_all_inputs() -> void:
 	io_manager.unbind_all_inputs()
 
@@ -168,7 +202,7 @@ func register_cvar(cvar_name: String, value: Variant, help_text: String = "") ->
 	
 	set_cvar(cvar_name, value)
 
-
+## Converts strings to other supported console types
 func convert_value(value_type: int, new_value: String) -> Variant:
 	match value_type:
 		TYPE_BOOL: return new_value == "true" or new_value == "1"
@@ -181,6 +215,7 @@ func __adjust_type(old_value: Variant, new_value: String) -> Variant:
 	var value_type: int = typeof(old_value)
 	return convert_value(value_type, new_value)
 
+## Displays a CVAR (type and value) through console log.
 func show_cvar(cvar_name: String) -> void:
 	if !__cvars.has(cvar_name):
 		self.warn("CVAR '%s' not found." % cvar_name)
@@ -188,7 +223,7 @@ func show_cvar(cvar_name: String) -> void:
 	var hint: String = __cvars[cvar_name].hint
 	self.log(hint)
 
-# Assign new value to the CVAR.
+## Assigns new value to the CVAR.
 func set_cvar(cvar_name: String, value: Variant) -> void:
 	if !__cvars.has(cvar_name):
 		self.warn("CVAR '%s' not found." % cvar_name)
@@ -212,7 +247,7 @@ func set_cvar(cvar_name: String, value: Variant) -> void:
 	
 	changed_cvar.emit(cvar_name)
 
-# Assign new value to the CVAR.
+## Sets CVAR to read-only state.
 func freeze_cvar(cvar_name: String, is_frozen: bool = true) -> void:
 	if !__cvars.has(cvar_name):
 		self.warn("CVAR '%s' not found." % cvar_name)
@@ -350,6 +385,7 @@ func submit(expression: String, track_history: bool = false) -> void:
 	submit_ast(parsed.ast)
 
 
+## Adds a history item to previously accepted commands.
 func push_history(expression: String) -> void:
 	var history_len: int = __history.size()
 	if history_len and __history[history_len - 1] == expression:
@@ -358,6 +394,7 @@ func push_history(expression: String) -> void:
 	__history.append(expression)
 
 
+## Same as submit, but takes pre-parsed AST.
 func submit_ast(ast: Array[PackedStringArray]) -> void:
 	for i: int in ast.size():
 		var part: PackedStringArray = ast[i]

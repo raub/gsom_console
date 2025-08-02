@@ -85,7 +85,7 @@ func _ready() -> void:
 	__resize_bottom.gui_input.connect(__handle_input_resize_bottom)
 	__resize_left.gui_input.connect(__handle_input_resize_left)
 	__resize_right.gui_input.connect(__handle_input_resize_right)
-
+	
 	GsomConsole.toggled.connect(__handle_visibility)
 
 func __handle_visibility(new_is_visible: bool) -> void:

@@ -339,7 +339,7 @@ func __cmd_list_bound_commands(args: PackedStringArray) -> void:
 	var result: PackedStringArray = []
 	var showUnbound: bool = args.size() > 0
 	
-	var input_names: Array[String] = (
+	var input_names: Array = (
 		Array(args) if args.size() else GsomConsole.io_manager.get_input_names()
 	)
 	

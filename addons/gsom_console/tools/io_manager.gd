@@ -9,22 +9,26 @@ var __plus_aliases: Dictionary[String, Array] = {}
 var __minus_aliases: Dictionary[String, Array] = {}
 
 
+## Registers a new action name for your game.
 func register_action(action_name: String) -> void:
 	if !__base_actions.has(action_name):
 		__base_actions[action_name] = false
 
 
+## Removes a previously registered game action by name.
 func erase_action(action_name: String) -> void:
 	if __base_actions.has(action_name):
 		__base_actions.erase(action_name)
 
 
+## Fetch the action status by name - pressed or not.
 func read_action(action_name: String) -> bool:
 	if __base_actions.has(action_name):
 		return __base_actions[action_name]
 	return false
 
 
+## Binds any console command to the given input name.
 func bind_input(input_name: String, command: String) -> void:
 	if !__input_to_command.has(input_name):
 		return
@@ -37,22 +41,25 @@ func bind_input(input_name: String, command: String) -> void:
 	__input_to_command[input_name] = parsed.ast
 
 
+## Clears the bound command for the given input name.
 func unbind_input(input_name: String) -> void:
 	if !__input_to_command.has(input_name):
 		return
 	__input_to_command[input_name] = []
 
+## Clears all bound commands.
 func unbind_all_inputs() -> void:
 	for input_name: String in __input_to_state:
 		__input_to_command[input_name] = []
 
+## Passes input events into the input manager instance.
 func handle_input(event: InputEvent) -> void:
 	var input_name := get_name_by_event(event)
 	if input_name:
 		set_state_by_name(input_name, event.is_pressed())
 
 
- # A ret*rded way of doing things, but well
+## A list of all accepted Keyboard inputs
 const key_list: Array[Key] = [
 	KEY_ESCAPE, KEY_TAB, KEY_BACKSPACE, KEY_ENTER,
 	KEY_KP_ENTER, KEY_INSERT, KEY_DELETE, KEY_PAUSE,
@@ -73,6 +80,7 @@ const key_list: Array[Key] = [
 	KEY_QUOTELEFT, KEY_ASCIITILDE,
 ]
 
+## A list of all accepted Mouse inputs
 const mouse_list: Array[MouseButton] = [
 	MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, MOUSE_BUTTON_MIDDLE,
 	MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN,
@@ -80,6 +88,7 @@ const mouse_list: Array[MouseButton] = [
 	MOUSE_BUTTON_XBUTTON1, MOUSE_BUTTON_XBUTTON2, 
 ]
 
+## A list of all accepted Joystick inputs
 var joy_list: Array[JoyButton] = [
 	JOY_BUTTON_A, JOY_BUTTON_B, JOY_BUTTON_X, JOY_BUTTON_Y,
 	JOY_BUTTON_BACK, JOY_BUTTON_GUIDE, JOY_BUTTON_START,
@@ -107,7 +116,9 @@ var __input_to_command: Dictionary[String, Array] = {}
 func _init() -> void:
 	reset()
 
-
+## Reinitializes the input lists. This is also run in constructor.
+##
+## If you want to add or remove any supported input - you need to reinit the lists.
 func reset() -> void:
 	__key_to_label = {}
 	__key_to_name = {}
@@ -159,6 +170,9 @@ func alias(alias_name: String, alias_text: String = "") -> void:
 		var parsed_minus := GsomConsole.AstParser.new(alias_text)
 		__minus_aliases[name_only] = parsed_minus.ast
 
+## Get a default Godot InputEvent for a given input name.
+##
+## If name is not valid, a KEY_NONE InputEventKey is returned.
 func get_event_by_name(input_name: String) -> InputEvent:
 	if !__input_to_event.has(input_name):
 		var e := InputEventKey.new()
@@ -166,7 +180,7 @@ func get_event_by_name(input_name: String) -> InputEvent:
 		return e
 	return __input_to_event[input_name]
 
-
+## For any known event returns the name. Otherwise returns an empty string.
 func get_name_by_event(e: InputEvent) -> String:
 	if e is InputEventKey:
 		var e_key := e as InputEventKey
@@ -188,22 +202,24 @@ func get_name_by_event(e: InputEvent) -> String:
 	
 	return ""
 
-
+## Returns a human-readable label for registered input names.
 func get_label_by_name(input_name: String) -> String:
 	if !__input_to_label.has(input_name):
 		return ""
 	return __input_to_label[input_name]
 
-
+## Get a list of all supported input names.
 func get_input_names() -> Array[String]:
 	return __input_to_command.keys()
 
-
+## Get the bound command text for the given input_name.
+##
+## This string is reconstructed from the stored AST, so it may differ from the initial.
 func get_command_by_name(input_name: String) -> String:
 	if !__input_to_command.has(input_name):
 		return ""
 	
-	var ast: Array[PackedStringArray] = __input_to_command[input_name]
+	var ast: Array = __input_to_command[input_name]
 	if !ast.size():
 		return ""
 	
@@ -213,13 +229,13 @@ func get_command_by_name(input_name: String) -> String:
 	
 	return GsomConsole.CMD_SEPARATOR.join(commands)
 
-
+## Fetches state of the given input name - pressed or not.
 func get_state_by_name(input_name: String) -> bool:
 	if !__input_to_state.has(input_name):
 		return false
 	return __input_to_state[input_name]
 
-
+## Assigns the input name state directly.
 func set_state_by_name(input_name: String, event_state: bool) -> void:
 	if !__input_to_state.has(input_name):
 		return
@@ -233,7 +249,9 @@ func set_state_by_name(input_name: String, event_state: bool) -> void:
 	var ast: Array = __input_to_command[input_name]
 	handle_action(ast, event_state)
 
-
+## Executes the command with the assigned event state.
+##
+## I.e. executing `+jump` with false means `-jump`. And some other hacks.
 func handle_action(ast: Array, event_state: bool) -> void:
 	if !ast.size():
 		return
