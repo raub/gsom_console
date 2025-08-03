@@ -64,9 +64,9 @@ doesn't do anything specific per CMD call - only emits the `called_cmd` signal.
 * `find` - Find matching symbols - similar to how hints work. Use `find ec` or find `it`.
 * `greet` - Show introduction/greeting message. Use `greet \"Your message here\"`.
 * `help` - Display available commands and variables. Use `help name1 name2` or `help`.
-* `ifvi` - Takes 4+ args: variable, cmp, immediate, ...action. Cmp is one of: ==,!=,>,>=,<,<=. E.g.: `ifvi x == 10 echo x is 10`. True > false, string comparison rules apply too.
-* `ifvv` - Takes 4+ args: variable1, cmp, variable2, ...action. Cmp is one of: ==,!=,>,>=,<,<=. E.g.: `ifvv var1 < var2 \"alias out echo var1\"`.
-* `inc` - Increments CVAR value by 1, 1.0, true, ' ' (depending on type), or your custom values. Use `inc x` or `inc s abcd`.
+* `ifvi` - Takes 4+ args: `variable, cmp, immediate, ...command`. Cmp is one of: `==,!=,>,>=,<,<=`. E.g.: `ifvi x == 10 echo x is 10`. True > false, string comparison rules apply too.
+* `ifvv` - Takes 4+ args: `variable1, cmp, variable2, ...command`. Cmp is one of: `==,!=,>,>=,<,<=`. E.g.: `ifvv var1 < var2 \"alias out echo var1\"`.
+* `inc` - Increments CVAR value by `1, 1.0, true, ' '` (depending on type), or your custom values. Use `inc x` or `inc s abcd`.
 * `list_bind_names` - List all available input names, or a filtered subset.
 * `list_bound_commands` - Shows currently bound inputs. Either all, or filtered, if query arguments presend: `list_bound_commands w a s d`.
 * `mainscene` - Reload the main scene (as in project settings).

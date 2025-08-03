@@ -24,6 +24,7 @@ func _ready() -> void:
 	__test_console_ifvv()
 	__test_console_inc()
 	__test_console_dec()
+	__test_console_clear()
 
 #region Test Helpers
 
@@ -421,7 +422,7 @@ func __test_console_find() -> void:
 		GsomConsole.log_text.contains("exec") and
 		GsomConsole.log_text.contains("write_cvars")
 	):
-		desc.push_ok(["finds the requested commands"])
+		desc.push_ok(["found the requested commands"])
 	else:
 		desc.push_error(["did not find 'exec' and ''"])
 	
@@ -447,7 +448,7 @@ func __test_console_write_cvars() -> void:
 	
 	var content: String = file.get_as_text(true)
 	if content.contains("test_write_cvar test-text"):
-		desc.push_ok(["writes cvars to file"])
+		desc.push_ok(["wrote cvars to file"])
 	else:
 		desc.push_error(["cvars not written to file", OS.get_data_dir()])
 	
@@ -455,12 +456,13 @@ func __test_console_write_cvars() -> void:
 
 
 func __test_console_write_groups() -> void:
-	var desc := Describe.new("Console Write Cvars", __label)
+	var desc := Describe.new("Console Write Groups", __label)
 	
 	DirAccess.remove_absolute("user://test_write_groups.cfg")
 	
 	GsomConsole.register_cvar("test_write_groups", "test-text")
 	GsomConsole.submit("alias alias_write_groups test_write_groups")
+	GsomConsole.submit("bind t alias_write_groups")
 	
 	GsomConsole.submit("write_groups test_write_groups.cfg")
 	var file: FileAccess = FileAccess.open(
@@ -477,11 +479,12 @@ func __test_console_write_groups() -> void:
 	var content: String = file.get_as_text(true)
 	if (
 		content.contains("test_write_cvar test-text") and
+		content.contains("bind t \"alias_write_groups\"") and
 		content.contains("alias alias_write_groups \"test_write_groups\"")
 	):
-		desc.push_ok(["writes cvars to file"])
+		desc.push_ok(["wrote groups to file"])
 	else:
-		desc.push_error(["cvars not written to file", OS.get_data_dir()])
+		desc.push_error(["groups not written to file", OS.get_data_dir()])
 	
 	desc.flush()
 
@@ -715,6 +718,19 @@ func __test_console_dec() -> void:
 		desc.push_ok(["str variable has been decremented"])
 	else:
 		desc.push_error(["str variable not decremented"])
+	
+	desc.flush()
+
+func __test_console_clear() -> void:
+	var desc := Describe.new("Console Clear", __label)
+	
+	GsomConsole.submit("echo test test test")
+	GsomConsole.clear()
+	
+	if GsomConsole.log_text == "":
+		desc.push_ok(["log cleared"])
+	else:
+		desc.push_error(["log not cleared"])
 	
 	desc.flush()
 

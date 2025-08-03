@@ -23,7 +23,7 @@ func _init(input: String) -> void:
 	input = input.strip_edges()
 	if input.is_empty():
 		return
-
+	
 	# Initial validation: first char must be a valid command name start
 	if !__is_valid_command_start(input[0]):
 		__error = "Command must start with a letter or underscore."
