@@ -202,6 +202,18 @@ Shortcuts for `GsomConsole.io_manager`.
 * `unbind_input(input_name: String) -> void` - Clears the bound command for the given input name.
 * `unbind_all_inputs() -> void` - Clears all bound commands.
 
+Full list of supported inputs (as in `list_bind_names`):
+```
+escape tab backspace enter kp_enter insert delete pause home end left up right down
+page_up page_down shift ctrl alt caps_lock num_lock f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12
+kp_multiply kp_divide kp_subtract kp_period kp_add kp_0 kp_1 kp_2 kp_3 kp_4 kp_5 kp_6 kp_7 kp_8 kp_9
+menu back forward space apostrophe comma minus period slash 0 1 2 3 4 5 6 7 8 9 semicolon equal
+a b c d e f g h i j k l m n o p q r s t u v w x y z bracket_left back_slash bracket_right
+quote_left ascii_tilde left_mouse right_mouse middle_mouse wheel_up wheel_down wheel_left wheel_right thumb_1 thumb_2
+joystick_0 joystick_1 joystick_2 joystick_3 joystick_4 joystick_5 joystick_6 joystick_7 joystick_8 joystick_9 joystick_10
+joystick_11 joystick_12 joystick_13 joystick_14 joystick_15 joystick_20 joystick_16 joystick_17 joystick_18 joystick_19
+```
+
 **Types**
 
 * `class GsomConsole.CommonUi` - Incapsulates common UI logic - you can use it for custom console windows.
