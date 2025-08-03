@@ -245,24 +245,24 @@ func __cmd_inc(args: PackedStringArray) -> void:
 		TYPE_BOOL:
 			GsomConsole.set_cvar(cvar_name, true)
 		TYPE_INT:
-			var valueInt: int = value
+			var value_int: int = value
 			if immediate == null:
-				GsomConsole.set_cvar(cvar_name, valueInt + 1)
+				GsomConsole.set_cvar(cvar_name, value_int + 1)
 			else:
-				GsomConsole.set_cvar(cvar_name, valueInt + immediate)
+				GsomConsole.set_cvar(cvar_name, value_int + immediate)
 		TYPE_FLOAT:
-			var valueFloat: float = value
+			var value_float: float = value
 			if immediate == null:
-				GsomConsole.set_cvar(cvar_name, valueFloat + 1.0)
+				GsomConsole.set_cvar(cvar_name, value_float + 1.0)
 			else:
-				GsomConsole.set_cvar(cvar_name, valueFloat + immediate)
+				GsomConsole.set_cvar(cvar_name, value_float + immediate)
 		# String and all else
 		_:
-			var valueStr: String = value
+			var value_str: String = value
 			if immediate == null:
-				GsomConsole.set_cvar(cvar_name, valueStr + " ")
+				GsomConsole.set_cvar(cvar_name, value_str + " ")
 			else:
-				GsomConsole.set_cvar(cvar_name, valueStr + immediate)
+				GsomConsole.set_cvar(cvar_name, value_str + immediate)
 	GsomConsole.show_cvar(cvar_name)
 
 
@@ -285,25 +285,25 @@ func __cmd_dec(args: PackedStringArray) -> void:
 		TYPE_BOOL:
 			GsomConsole.set_cvar(cvar_name, false)
 		TYPE_INT:
-			var valueInt: int = value
+			var value_int: int = value
 			if immediate == null:
-				GsomConsole.set_cvar(cvar_name, valueInt - 1)
+				GsomConsole.set_cvar(cvar_name, value_int - 1)
 			else:
-				GsomConsole.set_cvar(cvar_name, valueInt - immediate)
+				GsomConsole.set_cvar(cvar_name, value_int - immediate)
 		TYPE_FLOAT:
-			var valueFloat: float = value
+			var value_float: float = value
 			if immediate == null:
-				GsomConsole.set_cvar(cvar_name, valueFloat - 1.0)
+				GsomConsole.set_cvar(cvar_name, value_float - 1.0)
 			else:
-				GsomConsole.set_cvar(cvar_name, valueFloat - immediate)
+				GsomConsole.set_cvar(cvar_name, value_float - immediate)
 		# String and all else
 		_:
-			var valueStr: String = value
+			var value_str: String = value
 			if immediate == null:
-				GsomConsole.set_cvar(cvar_name, valueStr.substr(0, valueStr.length() - 1))
+				GsomConsole.set_cvar(cvar_name, value_str.substr(0, value_str.length() - 1))
 			else:
 				var imm_string: String = immediate
-				GsomConsole.set_cvar(cvar_name, valueStr.rstrip(imm_string))
+				GsomConsole.set_cvar(cvar_name, value_str.rstrip(imm_string))
 	GsomConsole.show_cvar(cvar_name)
 
 
@@ -343,7 +343,7 @@ func __cmd_clear() -> void:
 
 func __cmd_list_bound_commands(args: PackedStringArray) -> void:
 	var result: PackedStringArray = []
-	var showUnbound: bool = args.size() > 0
+	var show_unbound: bool = args.size() > 0
 	
 	var input_names: Array = (
 		Array(args) if args.size() else GsomConsole.io_manager.get_input_names()
@@ -354,7 +354,7 @@ func __cmd_list_bound_commands(args: PackedStringArray) -> void:
 		var bound: String = GsomConsole.io_manager.get_command_by_name(input_name)
 		if bound:
 			result.append(__color(color, "[b]%s[/b] - \"%s\"." % [input_name, bound]))
-		elif showUnbound:
+		elif show_unbound:
 			result.append(__color(
 				GsomConsole.COLOR_SECONDARY,
 				"[b]%s[/b] - [lb]Not bound[rb]." % input_name,
@@ -476,6 +476,15 @@ func __cmd_write_groups(args: PackedStringArray) -> void:
 			alias_batch += "alias %s \"%s\"\n" % [key, __aliases[key]]
 		if alias_batch:
 			out_string += "\n\n# Aliases\n\n%s" % alias_batch
+	if !query_groups.size() or query_groups.has("bind"):
+		var bind_batch := ""
+		
+		for input_name: String in GsomConsole.io_manager.get_input_names():
+			var bound: String = GsomConsole.io_manager.get_command_by_name(input_name)
+			if bound:
+				bind_batch += "bind %s \"%s\"\n" % [input_name, bound]
+		if bind_batch:
+			out_string += "\n\n# Binds\n\n%s" % bind_batch
 	
 	if !out_string:
 		GsomConsole.warn("No groups found to write. The output file will be empty.")

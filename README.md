@@ -1,24 +1,27 @@
 # gsom_console
 
 A Half-Life 1 inspired console for Godot projects.
-There is a singleton, and optional UI (that doesn't autoload).
-It's also possible to craft your own UI instead.
-Future versions may provide additional UI implementations as well.
-
-Implements variables, commands, aliases, input, etc.
-You can use CVARs as global variables and settings. CMDs are like global events/signals.
-There are useful built-in commands as described below.
+* There is a singleton, and optional UI (that doesn't autoload).
+* It's also possible to craft your own UI.
+* Implements variables, commands, aliases, input, logic, etc.
+* There are useful built-in commands as described below.
 
 See [example](preview.gd) script.
 
 [![screenshot_1](/gdignore/thumbnail_1.jpg)](/gdignore/screenshot_1.jpg)
 [![screenshot_2](/gdignore/thumbnail_2.jpg)](/gdignore/screenshot_2.jpg)
 
+You can only register CVARs/CMDs/actions from code. Most other things can be then
+acheived through console scripting. Including direct calls to
+`GsomConsole.submit("any kind of command; as if from UI window")`.
+
+**CVARs**
+
+`GsomConsole.register_cvar("test", 5, "Description.")` - will register an `int` CVAR.
+
 Supported variable types: `bool, int, float, String` - the variable type
 is determined when it is registered with an initial value.
 After that, new values are interpreted as being of that type.
-
-`GsomConsole.register_cvar("test", 5, "Description.")` - will register an `int` CVAR.
 
 * `test` -> output 5
 * `test 6` -> now `test` is `6`
@@ -27,17 +30,28 @@ After that, new values are interpreted as being of that type.
 Registering commands simply declares them for future calls. The console
 doesn't do anything specific per CMD call - only emits the `called_cmd` signal.
 
+**CMDs**
+
 `GsomConsole.register_cmd("do_something", "Description.")` - will register the `do_something` CMD.
 
 * `do_something` -> will emit `called_cmd.emit("do_something", [])`.
 * `do_something abc -1 20 true 3.3` -> will
     emit `called_cmd.emit("do_something", ["abc", "-1", "20", "true", "3.3"])`.
 
-**Built-in Commands**:
+**Actions**
 
-* `;` - not exactly a command, but a way to write multiple commands into one line.
+`GsomConsole.register_action("jump")` - will register the `jump` input action.
+
+* `+jump;wait;-jump` - performs a single-frame long jump press. During that frame,
+    `GsomConsole.read_action("jump")` will return true.
+* `bind space +jump` - activates the jump action while spacebar is pressed.
+
+
+## Built-in Commands
+
+* `;` - Not exactly a command, but a way to write multiple commands into one line.
     Even more useful in context of **alias**. E.g. `alias x "echo hi; alias x echo bye"`.
-* `wait` - a special command to postpone the execution by 1 tick. This makes most sense
+* `wait` - A special command to postpone the execution by 1 tick. This makes most sense
     together with `alias` and some frame-by-frame logic. For example,
     `cmd1; wait; cmd2` - the two commands will be executed on different frames.
 * `alias` - Create a named shortcut for any input text. Use `alias say echo` or `alias smile \"echo :)\"`.
@@ -240,15 +254,6 @@ available as a descendant of `Control` node.
     Makes window borders draggable.
 * `bool is_disabled` [default: false] [property: setter, getter] -
     Hides this console UI regardless of the singleton visibility state.
-
-## Future Work / Contributions
-
-The development focus of this plugin is following:
-
-* Consider allowing the `+/-` commands if that is going to work at all.
-* Add components: log overlay, bottom-left console (TES Oblivion/Skyrim).
-* Expand component options: colors, verbosity/log levels - maybe also
-    add cvars that control those on runtime.
 
 
 ## Console Feature Checklist
